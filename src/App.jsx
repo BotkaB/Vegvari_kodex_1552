@@ -32,6 +32,10 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [chatSubmitting, setChatSubmitting] = useState(false);
 
+  // Új állapotok a hibakezeléshez és figyelmeztetésekhez
+  const [quotaExhausted, setQuotaExhausted] = useState(false);
+  const [warningMessage, setWarningMessage] = useState(null);
+
   useEffect(() => {
     fetch('/api/auth/status')
       .then((res) => res.json())
@@ -58,6 +62,9 @@ export default function App() {
     if (!trimmed || resourceSubmitting) return;
 
     setResourceSubmitting(true);
+    setQuotaExhausted(false);
+    setWarningMessage(null);
+
     try {
       const res = await fetch('/api/resources', {
         method: 'POST',
@@ -65,7 +72,19 @@ export default function App() {
         body: JSON.stringify({ message: trimmed, mode: activeResourceMode }),
       });
       const data = await res.json();
+
+      // 429-es státusz vagy "elfogyott a keret" hiba kezelése
+      if (res.status === 429 || data.error === 'elfogyott a keret') {
+        setQuotaExhausted(true);
+        throw new Error(data.details || 'Minden elérhető AI modell napi kvótája kimerült.');
+      }
+
       if (!res.ok) throw new Error(data.error || 'Hiba történt az erőforrás lekérdezésekor.');
+
+      // Háttérbeli modellváltás figyelmeztetés kezelése
+      if (data._warning) {
+        setWarningMessage(data._warning);
+      }
 
       setServerData({
         document_content: data.document_content || null,
@@ -74,7 +93,9 @@ export default function App() {
         citation: data.citation || '',
       });
     } catch (err) {
-      alert(err.message);
+      if (!quotaExhausted) {
+        console.error(err.message);
+      }
     } finally {
       setResourceSubmitting(false);
     }
@@ -87,15 +108,29 @@ export default function App() {
     setMessages((prev) => [...prev, { role: 'user', content: trimmed }]);
     setChatInput('');
     setChatSubmitting(true);
+    setQuotaExhausted(false);
+    setWarningMessage(null);
 
     try {
       const res = await fetch('/api/mentor-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed }),
+        body: JSON.stringify({ message: trimmed, activeMentors: selectedMentors }),
       });
       const data = await res.json();
+
+      // 429-es státusz vagy "elfogyott a keret" hiba kezelése
+      if (res.status === 429 || data.error === 'elfogyott a keret') {
+        setQuotaExhausted(true);
+        throw new Error(data.details || 'Minden elérhető AI modell napi kvótája kimerült.');
+      }
+
       if (!res.ok) throw new Error(data.error || 'Hiba történt a mentor chat során.');
+
+      // Háttérbeli modellváltás figyelmeztetés kezelése
+      if (data._warning) {
+        setWarningMessage(data._warning);
+      }
 
       setMessages((prev) => [...prev, { role: 'assistant', data }]);
     } catch (err) {
@@ -116,6 +151,20 @@ export default function App() {
         setPresentationMode={setPresentationMode} 
         onLogout={handleLogout} 
       />
+
+      {/* Keret kimerülését jelző hiba sáv */}
+      {quotaExhausted && (
+        <div className="bg-red-900/90 border-b border-red-700 p-3 text-center text-sm font-semibold text-red-200">
+          ⚠️ Elfogyott a keret: Minden elérhető AI modell napi kvótája kimerült. Kérjük, próbálja meg később.
+        </div>
+      )}
+
+      {/* Háttérbeli modellváltásról szóló figyelmeztető sáv */}
+      {warningMessage && !quotaExhausted && (
+        <div className="bg-amber-900/80 border-b border-amber-700 p-2 text-center text-xs font-semibold text-amber-200">
+          ℹ️ {warningMessage}
+        </div>
+      )}
 
       <main className="grid flex-1 gap-4 p-4 lg:grid-cols-2">
         <ResourceEngine
