@@ -211,22 +211,42 @@ export function ResourceEngine({
           </div>
         )}
 
-        {/* 1. ÖSSZEFOGLALÓ NÉZET */}
+        {/* 1. ÖSSZEFOGLALÓ NÉZET (Frissítve: paragraphs tömb renderelése .map()-pel kártyákra) */}
         {!resourceSubmitting &&
           !isMissingFileError &&
           activeResourceMode === "chapter_summary" &&
           serverData?.document_content && (
-            <div className="rounded-2xl border border-[#3a3f4d] bg-[#14161b]/80 p-5 shadow-inner">
-              <h3 className="mb-3 border-b border-[#3a3f4d] pb-2 text-base font-bold text-amber-400">
+            <div className="space-y-3">
+              <h3 className="border-b border-[#3a3f4d] pb-2 text-base font-bold text-amber-400">
                 {serverData.document_content.title || "Dokumentum összefoglaló"}
               </h3>
-              <div className="whitespace-pre-line text-sm leading-relaxed text-stone-200 space-y-2">
-                {serverData.document_content.text}
-              </div>
+              
+              {Array.isArray(serverData.document_content.paragraphs) &&
+              serverData.document_content.paragraphs.length > 0 ? (
+                serverData.document_content.paragraphs.map((para, pIdx) => (
+                  <div
+                    key={pIdx}
+                    className="rounded-2xl border border-[#3a3f4d] bg-[#14161b]/80 p-4 shadow-sm transition hover:border-amber-500/40"
+                  >
+                    <p className="text-xs font-mono font-bold text-amber-400/80 mb-1">
+                      {pIdx + 1}. szakasz
+                    </p>
+                    <p className="text-sm leading-relaxed text-stone-200">
+                      {para}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-[#3a3f4d] bg-[#14161b]/80 p-5 shadow-inner">
+                  <p className="text-sm leading-relaxed text-stone-200">
+                    {serverData.document_content.text || "Nincs elérhető tartalom."}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
-        {/* 2. KVÍZ NÉZET (5 Kérdés) */}
+        {/* 2. KVÍZ NÉZET (5 Kérdés) - Változatlan */}
         {!resourceSubmitting &&
           !isMissingFileError &&
           activeResourceMode === "quiz_generation" &&
@@ -306,7 +326,7 @@ export function ResourceEngine({
             </div>
           )}
 
-        {/* 3. GYIK NÉZET */}
+        {/* 3. GYIK NÉZET - Változatlan */}
         {!resourceSubmitting && activeResourceMode === "faq" && (
           <div className="space-y-3">
             {localSubmitting && (

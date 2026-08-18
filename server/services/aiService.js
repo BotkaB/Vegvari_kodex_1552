@@ -47,7 +47,7 @@ const MENTOR_CHAT_SCHEMA = {
   ],
 };
 
-// Resource Engine elvárt JSON válaszstruktúrája
+// Resource Engine elvárt JSON válaszstruktúrája (Frissítve: text helyett paragraphs tömb)
 const RESOURCE_ENGINE_SCHEMA = {
   type: "object",
   properties: {
@@ -57,8 +57,12 @@ const RESOURCE_ENGINE_SCHEMA = {
       type: "object",
       properties: {
         title: { type: "string" },
-        text: { type: "string" },
+        paragraphs: {
+          type: "array",
+          items: { type: "string" },
+        },
       },
+      required: ["title", "paragraphs"],
       nullable: true,
     },
     quizzes: {
@@ -199,7 +203,6 @@ export async function initializeDocuments(dataDir) {
       }
     }
 
-    // Vállalati szinten: a dokumentumok betöltésekor/frissülésekor ürítjük a cache-t
     mentorCache.clear();
 
     console.log(
@@ -271,13 +274,11 @@ async function generateContentWithFallback(
 export async function callMentorChat(userMessage, activeMentors) {
   const cleanMessage = userMessage.trim().toLowerCase();
 
-  // 1. Ellenőrzés: ha a kérdés már szerepel a gyorsítótárban, azonnal visszaküldjük
   if (cleanMessage && mentorCache.get(cleanMessage)) {
     console.log("⚡ [MENTOR CACHE] Találat a gyorsítótárban, az AI hívás kihagyva!");
     return mentorCache.get(cleanMessage);
   }
 
-  // 2. Ha nincs cache-ben, összeállítjuk a kérést és hívjuk az AI-t
   const fileParts = uploadedFiles.map((f) => ({ fileData: f.fileData }));
   const contents = [
     {
@@ -298,7 +299,6 @@ export async function callMentorChat(userMessage, activeMentors) {
     MENTOR_CHAT_SCHEMA
   );
 
-  // A safeJsonParse segítségével objektummá alakítjuk a választ, hogy a frontend közvetlenül elérje a mezőket
   const parsedData = safeJsonParse(rawResult.text);
 
   const result = {
@@ -306,7 +306,6 @@ export async function callMentorChat(userMessage, activeMentors) {
     data: parsedData,
   };
 
-  // 3. Eltároljuk a választ a gyorsítótárban a következő alkalomra
   if (cleanMessage) {
     mentorCache.set(cleanMessage, result);
   }
@@ -336,7 +335,7 @@ export async function callResourceEngine(
   return await generateContentWithFallback(
     contents,
     RESOURCE_ENGINE_PROMPT,
-    0.4,
-    RESOURCE_ENGINE_SCHEMA
+  0.4,
+  RESOURCE_ENGINE_SCHEMA
   );
 }
