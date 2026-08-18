@@ -1,24 +1,65 @@
-// server/routes/resourceRoutes.js
 import express from "express";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { authGuard } from "../middlewares/auth.js";
 import { chatLimiter } from "../middlewares/rateLimiters.js";
-import { callResourceEngine } from "../services/aiService.js";
+import { callResourceEngine, getUploadedFiles } from "../services/aiService.js";
 import { safeJsonParse } from "../utils/jsonParser.js";
 
 const router = express.Router();
 
-// POST /api/resources
+// A modul útvonalának meghatározása (ESM kompatibilis)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ---------------------------------------------------------------------------
+// GYIK Adatok Memóriába Cache-elése (Performance Optimization)
+// ---------------------------------------------------------------------------
+let faqCache = null;
+
+const loadFaqData = () => {
+  if (faqCache) return faqCache;
+
+  // Pontos útvonalak felderítése a server mappán belül és kívül
+  const possiblePaths = [
+    path.resolve(__dirname, "../data/faq.json"),
+    path.resolve(process.cwd(), "server", "data", "faq.json"),
+    path.resolve(process.cwd(), "data", "faq.json"),
+  ];
+
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      try {
+        const content = fs.readFileSync(p, "utf-8");
+        faqCache = JSON.parse(content);
+        console.log(`✅ FAQ sikeresen betöltve a memóriába innen: ${p}`);
+        return faqCache;
+      } catch (err) {
+        console.error(`❌ Hiba a FAQ fájl parszolásakor (${p}):`, err);
+      }
+    }
+  }
+
+  return null;
+};
+
+// ---------------------------------------------------------------------------
+// VÉGPONTOK
+// ---------------------------------------------------------------------------
+
+// POST /api/resources - Dinamikus AI tartalomgenerálás
 router.post("/resources", authGuard, chatLimiter, async (req, res) => {
   try {
-    const { mode, selectedChapter } = req.body;
+    const { mode, selectedChapter, selectedFileUri } = req.body;
 
     if (!mode) {
       return res.status(400).json({ error: "A 'mode' megadása kötelező!" });
     }
 
-    const serviceResult = await callResourceEngine(mode, selectedChapter);
+    // 👇 JAVÍTVA: A selectedFileUri-t adjuk át harmadik (vagy megfelelő) paraméterként, 
+    // hogy a callResourceEngine pontosan tudja, melyik fájllal kell dolgoznia.
+    const serviceResult = await callResourceEngine(mode, selectedChapter, selectedFileUri);
     const parsedData = safeJsonParse(serviceResult.text);
 
     if (serviceResult.fallbackUsed && serviceResult.warningMessage) {
@@ -43,14 +84,10 @@ router.post("/resources", authGuard, chatLimiter, async (req, res) => {
   }
 });
 
-// GET /api/files - A data mappában lévő fájlok listája
+// GET /api/files - A Gemini által eltárolt fájlok listája az azonosítóikkal együtt
 router.get("/files", authGuard, (req, res) => {
   try {
-    const dataDir = path.resolve(process.cwd(), "data");
-    if (!fs.existsSync(dataDir)) {
-      return res.json({ files: [] });
-    }
-    const files = fs.readdirSync(dataDir);
+    const files = getUploadedFiles();
     return res.json({ files });
   } catch (err) {
     console.error("❌ Hiba a fájlok listázásakor:", err);
@@ -58,19 +95,22 @@ router.get("/files", authGuard, (req, res) => {
   }
 });
 
-// GET /api/faq - Statikus vagy fallback GYIK adatok
+// GET /api/faq - GYIK adatok lekérése a memóriából (Fast Path)
 router.get("/faq", authGuard, (req, res) => {
-  const faqData = [
-    {
-      question: "Kik az Egri Vár főbb védői 1552-ben?",
-      answer: "Dobó István várkapitány, Mekcsey István helyettes, Bornemissza Gergely deák és a többi vitéz.",
-    },
-    {
-      question: "Mi a Végvári Kódex célja?",
-      answer: "Az 1552-es egri ostrom történelmi és oktatási anyagainak interaktív feldolgozása AI segítségével.",
-    },
-  ];
-  return res.json(faqData);
+  try {
+    const faqData = loadFaqData();
+
+    if (!faqData) {
+      return res.status(404).json({ error: "A faq.json fájl nem található vagy hibás." });
+    }
+
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+
+    return res.json({ ok: true, data: faqData });
+  } catch (err) {
+    console.error("❌ Hiba a GYIK kiszolgálásakor:", err);
+    return res.status(500).json({ error: "Nem sikerült beolvasni a GYIK adatokat." });
+  }
 });
 
 export default router;

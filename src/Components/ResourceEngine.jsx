@@ -1,170 +1,182 @@
 import React, { useState, useEffect } from "react";
 
-// Helyi biztonsági fallback adatok a GYIK-hez, hogy azonnal megjelenjen
-const FALLBACK_FAQ = {
-  kategóriák: [
-    {
-      név: "Általános Várvédelmi Szabályok",
-      elemek: [
-        {
-          kérdés: "Mi a teendő riadó és vészhelyzet esetén?",
-          válasz: "Azonnal fel kell venni a védőfelszerelést, ellenőrizni kell a szolgálati utat, és a kijelölt körlethez kell vonulni a riadási utasítások szerint."
-        },
-        {
-          kérdés: "Hol találom a hatályos belső szabályzatokat?",
-          válasz: "Minden hivatalos SOP, HR szabályzat és a Végvári Kódex is elérhető a digitális archívumban az erőforrás motoron keresztül."
-        }
-      ]
-    },
-    {
-      név: "HR és Munkavégzési Irányelvek",
-      elemek: [
-        {
-          kérdés: "Hogyan működik a belső helyszíni és távmunkavégzés?",
-          válasz: "A távmunka feltételeit a HR_POL_1552-es szabályzat részletezi. A kérelmet előzetesen egyeztetni kell a közvetlen felettessel."
-        },
-        {
-          kérdés: "Milyen elvárások vonatkoznak az új junior program résztvevőire?",
-          válasz: "A junior program (HR_ONB_1552) strukturált mentorált bevezetést biztosít a várvédelmi feladatokba és a dokumentumkezelésbe."
-        }
-      ]
-    },
-    {
-      név: "Beszerzés és Biztonság (NDA)",
-      elemek: [
-        {
-          kérdés: "Milyen szabályok vonatkoznak a beszerzésekre és készletkezelésre?",
-          válasz: "A beszerzési folyamatokat a PRO_PUR_1552 szabályzat írja elő, amely biztosítja a vár logisztikai és élelmezési biztonságát."
-        },
-        {
-          kérdés: "Mit tartalmaz a Végvári NDA (Titoktartási nyilatkozat)?",
-          válasz: "A SEC_NDA_1552 dokumentum értelmében a várbeli belső információk, védelmi tervek és stratégiai adatok harmadik félnek nem adhatók ki."
-        }
-      ]
-    }
-  ]
-};
-
 export function ResourceEngine({
   activeResourceMode,
   setActiveResourceMode,
   serverData,
   setServerData,
-  resourceInput,
-  setResourceInput,
   resourceSubmitting,
   handleResourceFetch,
   availableFiles = [],
   selectedFileUri,
   setSelectedFileUri,
 }) {
-  const [openCategories, setOpenCategories] = useState({ 0: true }); // Alapból az első kategória nyitva
+  const [openCategories, setOpenCategories] = useState({});
   const [openItems, setOpenItems] = useState({});
   const [localSubmitting, setLocalSubmitting] = useState(false);
+  const [faqError, setFaqError] = useState(null);
 
-  // Függvény a GYIK adatok lekérésére a szerverről (ha sikertelen, a fallback lép életbe)
+  // Kvíz válaszok állapotkezelése: { [questionIndex]: selectedOptionString }
+  const [userAnswers, setUserAnswers] = useState({});
+
+  // Függvény a GYIK adatok lekérésére a backendről (/api/faq)
   const fetchFaqData = async () => {
-    // Ha már van betöltve faq_content, nem hívjuk újra
-    if (serverData?.faq_content?.kategóriák) return;
-
     setLocalSubmitting(true);
+    setFaqError(null);
+
     try {
-      const res = await fetch('/api/faq', { credentials: 'include' });
-      const data = await res.json();
-      if (data.ok && setServerData) {
-        setServerData(prev => ({
-          ...(prev || {}),
-          faq_content: { kategóriák: data.kategóriák },
-          document_content: null,
-          quiz: null,
-          citation: "FAQ_1552.pdf (Hivatalos Várvédelmi Gyűjtemény)"
-        }));
+      const res = await fetch("/api/faq", { credentials: "include" });
+      const responseData = await res.json();
+
+      const actualData = responseData.data || responseData;
+
+      if (res.ok && actualData) {
+        if (setServerData) {
+          setServerData((prev) => ({
+            ...(prev || {}),
+            faq_content: actualData,
+            document_content: null,
+            quizzes: null,
+            citation:
+              actualData.citation ||
+              "FAQ-1552.pdf (Hivatalos Végvári Tudásbázis)",
+          }));
+        }
       } else {
-        applyFallbackFaq();
+        setFaqError(
+          responseData.error ||
+            "Nem sikerült betölteni a GYIK adatokat a szerverről.",
+        );
       }
     } catch (err) {
-      console.warn("Hiba a GYIK lekérésekor, fallback használata:", err);
-      applyFallbackFaq();
+      console.error("❌ Hiba a GYIK lekérésekor:", err);
+      setFaqError("Hálózati hiba történt a GYIK betöltése során.");
     } finally {
       setLocalSubmitting(false);
     }
   };
 
-  const applyFallbackFaq = () => {
-    if (setServerData) {
-      setServerData(prev => ({
-        ...(prev || {}),
-        faq_content: FALLBACK_FAQ,
-        document_content: null,
-        quiz: null,
-        citation: "FAQ_1552.pdf (Hivatalos Várvédelmi Gyűjtemény)"
-      }));
-    }
-  };
-
-  // Komponens betöltődésekor azonnal állítsuk be a GYIK módot és töltsük be az adatot
+  // Komponens betöltődésekor alapértelmezetten a GYIK-et kérjük le
   useEffect(() => {
-    if (!activeResourceMode || activeResourceMode === 'faq') {
-      if (setActiveResourceMode && activeResourceMode !== 'faq') {
-        setActiveResourceMode('faq');
+    if (!activeResourceMode || activeResourceMode === "faq") {
+      if (setActiveResourceMode && activeResourceMode !== "faq") {
+        setActiveResourceMode("faq");
       }
       if (!serverData?.faq_content) {
-        applyFallbackFaq(); // Először azonnal kirajzoljuk a statikusat, majd lekérdezzük a szervert
         fetchFaqData();
       }
     }
   }, []);
 
+  // Új kvíz adatok érkezésekor nullázzuk a korábbi felhasználói válaszokat
+  useEffect(() => {
+    if (serverData?.quizzes) {
+      setUserAnswers({});
+    }
+  }, [serverData?.quizzes]);
+
   const toggleCategory = (catIdx) => {
-    setOpenCategories(prev => ({ ...prev, [catIdx]: !prev[catIdx] }));
+    setOpenCategories((prev) => ({ ...prev, [catIdx]: !prev[catIdx] }));
   };
 
   const toggleItem = (catIdx, eIdx) => {
     const key = `${catIdx}-${eIdx}`;
-    setOpenItems(prev => ({ ...prev, [key]: !prev[key] }));
+    setOpenItems((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Módváltás kezelése
   const handleModeChange = async (newMode) => {
+    if (newMode === activeResourceMode) return;
+
+    // Ha kvízre vagy összefoglalóra vált, de nincs kiválasztva fájl, figyelmeztetünk
+    if (newMode !== "faq" && !selectedFileUri) {
+      alert("Kérlek, válassz ki egy dokumentumot a kvíz vagy összefoglaló generálásához!");
+      return;
+    }
+
     setActiveResourceMode(newMode);
-    if (newMode === 'faq') {
-      await fetchFaqData();
+
+    if (newMode === "faq") {
+      if (!serverData?.faq_content) {
+        await fetchFaqData();
+      }
+    } else {
+      if (handleResourceFetch) {
+        handleResourceFetch(newMode, selectedFileUri);
+      }
     }
   };
 
+  const handleFileChange = (newUri) => {
+    setSelectedFileUri(newUri);
+    // Ha nem GYIK módban vagyunk, és választott fájlt, azonnal frissítjük a tartalmat
+    if (activeResourceMode !== "faq" && newUri && handleResourceFetch) {
+      handleResourceFetch(activeResourceMode, newUri);
+    }
+  };
+
+  const handleSelectOption = (qIdx, option) => {
+    setUserAnswers((prev) => ({
+      ...prev,
+      [qIdx]: option,
+    }));
+  };
+
+  const kategoriak =
+    serverData?.faq_content?.kategoriak ||
+    serverData?.faq_content?.kategóriák ||
+    [];
+
+  const quizList = serverData?.quizzes || [];
+  const answeredCount = Object.keys(userAnswers).length;
+  const correctCount = quizList.reduce((acc, q, idx) => {
+    return userAnswers[idx] === q.correct_answer ? acc + 1 : acc;
+  }, 0);
+
+  // Ellenőrizzük, hogy az AI visszaküldte-e a hiányzó dokumentumra utaló hibaüzenetet
+  const isMissingFileError = serverData?.citation === "Nincs megfelelő dokumentum kiválasztva.";
+
   return (
     <section className="flex flex-col rounded-3xl border border-[#3a3f4d] bg-[#1f222b]/90 p-4 shadow-xl">
+      {/* Fejléc és Módválasztó */}
       <div className="mb-3 flex flex-col gap-3 border-b border-[#3a3f4d] pb-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-xl font-bold text-amber-400 tracking-wide">📖 Erőforrás Motor</h2>
-        
+        <h2 className="text-xl font-bold tracking-wide text-amber-400">
+          📖 Erőforrás Motor
+        </h2>
+
         {/* Dokumentumválasztó legördülő */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select
-            value={selectedFileUri}
-            onChange={(e) => setSelectedFileUri(e.target.value)}
-            className="rounded-xl border border-[#3a3f4d] bg-[#14161b] px-3 py-1 text-xs text-stone-200 outline-none focus:border-amber-400 shadow-inner"
+            value={selectedFileUri || ""}
+            onChange={(e) => handleFileChange(e.target.value)}
+            disabled={resourceSubmitting}
+            className="rounded-xl border border-[#3a3f4d] bg-[#14161b] px-3 py-1 text-xs text-stone-200 outline-none shadow-inner focus:border-amber-400 disabled:opacity-50"
           >
-            <option value="">-- Összes / Nincs kiválasztva --</option>
+            <option value="" disabled>
+              -- Válassz dokumentumot --
+            </option>
             {availableFiles.map((file, idx) => (
-              <option key={idx} value={file.fileUri}>
+              <option key={idx} value={file.fileData?.fileUri}>
                 {file.displayName || file.name || `Dokumentum ${idx + 1}`}
               </option>
             ))}
           </select>
 
+          {/* Módválasztó gombok */}
           <div className="flex flex-wrap gap-1">
             {[
-              { id: 'faq', label: 'GYIK' },
-              { id: 'quiz_generation', label: 'Kvíz' },
-              { id: 'chapter_summary', label: 'Összefoglaló' },
+              { id: "faq", label: "GYIK" },
+              { id: "quiz_generation", label: "Kvíz (5 kérdés)" },
+              { id: "chapter_summary", label: "Összefoglaló" },
             ].map((m) => (
               <button
                 key={m.id}
                 onClick={() => handleModeChange(m.id)}
-                className={`rounded-xl px-2.5 py-1 text-xs font-semibold transition shadow-sm ${
+                disabled={resourceSubmitting || (m.id !== "faq" && !selectedFileUri)}
+                title={m.id !== "faq" && !selectedFileUri ? "Előbb válassz ki egy dokumentumot!" : ""}
+                className={`rounded-xl px-2.5 py-1 text-xs font-semibold shadow-sm transition disabled:opacity-40 ${
                   activeResourceMode === m.id
-                    ? 'bg-amber-500 text-stone-950 font-bold'
-                    : 'bg-[#14161b] text-stone-300 hover:bg-[#252833] border border-[#3a3f4d]'
+                    ? "bg-amber-500 font-bold text-stone-950"
+                    : "border border-[#3a3f4d] bg-[#14161b] text-stone-300 hover:bg-[#252833]"
                 }`}
               >
                 {m.label}
@@ -174,95 +186,222 @@ export function ResourceEngine({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-4 text-stone-300 mb-4 max-h-[50vh]">
-        {serverData?.document_content && activeResourceMode !== 'faq' && (
-          <div className="rounded-2xl bg-[#14161b]/80 p-4 border border-[#3a3f4d]">
-            <h3 className="font-bold text-white mb-2">{serverData.document_content.title}</h3>
-            <p className="text-sm leading-relaxed">{serverData.document_content.text}</p>
+      {/* Fő tartalom megjelenítő terület */}
+      <div className="mb-2 max-h-[60vh] flex-1 space-y-4 overflow-y-auto text-stone-300">
+        {/* AI Töltés kijelzése */}
+        {resourceSubmitting && (
+          <div className="flex flex-col items-center justify-center space-y-2 py-12 text-amber-400">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-400 border-t-transparent"></div>
+            <p className="text-xs font-semibold">
+              Az AI éppen feldolgozza a dokumentumot...
+            </p>
           </div>
         )}
 
-        {serverData?.quiz && activeResourceMode !== 'faq' && (
-          <div className="rounded-2xl bg-[#14161b]/80 p-4 border border-amber-500/30">
-            <p className="text-sm font-semibold mb-2 text-stone-200">{serverData.quiz.question}</p>
-            <ul className="space-y-1 mb-2">
-              {serverData.quiz.options?.map((opt, i) => (
-                <li key={i} className="text-xs bg-[#252833] p-2 rounded-xl border border-[#3a3f4d]">{opt}</li>
-              ))}
-            </ul>
-            {serverData.quiz.explanation && (
-              <p className="text-xs text-stone-400 mt-2"><strong>Magyarázat:</strong> {serverData.quiz.explanation}</p>
-            )}
+        {/* AI Hibaüzenet kezelése, ha nincs fájl kiválasztva */}
+        {!resourceSubmitting && isMissingFileError && (
+          <div className="rounded-2xl border border-amber-500/50 bg-amber-950/30 p-6 text-center space-y-2">
+            <p className="text-sm font-bold text-amber-300">⚠️ Figyelem</p>
+            <p className="text-xs text-stone-300">
+              Kérlek, válassz ki egy konkrét dokumentumot a felső legördülő menüből a kvíz vagy az összefoglaló generálásához!
+            </p>
           </div>
         )}
 
-        {/* Lenyitható (Accordion) GYIK nézet */}
-        {activeResourceMode === 'faq' && (
-          <div className="space-y-3">
-            {localSubmitting && <p className="text-xs text-amber-400 text-center mb-1">Adatok frissítése...</p>}
-            {(serverData?.faq_content?.kategóriák || FALLBACK_FAQ.kategóriák).map((cat, cIdx) => (
-              <div key={cIdx} className="rounded-2xl bg-[#14161b]/80 border border-[#3a3f4d] overflow-hidden">
-                <button
-                  onClick={() => toggleCategory(cIdx)}
-                  className="w-full flex items-center justify-between p-3 text-left font-bold text-white bg-[#1a1d26] hover:bg-[#252833] transition"
-                >
-                  <span className="text-sm text-amber-400">📁 {cat.név}</span>
-                  <span className="text-xs text-stone-400">{openCategories[cIdx] ? '▲ Bezár' : '▼ Nyit'}</span>
-                </button>
+        {/* 1. ÖSSZEFOGLALÓ NÉZET */}
+        {!resourceSubmitting &&
+          !isMissingFileError &&
+          activeResourceMode === "chapter_summary" &&
+          serverData?.document_content && (
+            <div className="rounded-2xl border border-[#3a3f4d] bg-[#14161b]/80 p-5 shadow-inner">
+              <h3 className="mb-3 border-b border-[#3a3f4d] pb-2 text-base font-bold text-amber-400">
+                {serverData.document_content.title || "Dokumentum összefoglaló"}
+              </h3>
+              <div className="whitespace-pre-line text-sm leading-relaxed text-stone-200 space-y-2">
+                {serverData.document_content.text}
+              </div>
+            </div>
+          )}
 
-                {openCategories[cIdx] && (
-                  <div className="p-3 space-y-2 border-t border-[#3a3f4d]">
-                    {cat.elemek?.map((el, eIdx) => {
-                      const itemKey = `${cIdx}-${eIdx}`;
-                      const isOpen = openItems[itemKey];
-                      return (
-                        <div key={eIdx} className="rounded-xl bg-[#14161b] border border-[#3a3f4d] overflow-hidden">
-                          <button
-                            onClick={() => toggleItem(cIdx, eIdx)}
-                            className="w-full flex items-center justify-between p-2.5 text-left text-xs font-semibold text-stone-200 hover:bg-[#252833] transition"
-                          >
-                            <span>❓ {el.kérdés}</span>
-                            <span className="text-stone-400">{isOpen ? '−' : '+'}</span>
-                          </button>
-                          {isOpen && (
-                            <div className="p-2.5 text-xs text-stone-300 border-t border-[#3a3f4d] bg-[#101216] leading-relaxed">
-                              <span className="font-bold text-amber-300 mr-1">Válasz:</span> {el.válasz}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+        {/* 2. KVÍZ NÉZET (5 Kérdés) */}
+        {!resourceSubmitting &&
+          !isMissingFileError &&
+          activeResourceMode === "quiz_generation" &&
+          quizList.length > 0 && (
+            <div className="space-y-4">
+              {/* Eredményjelző sáv */}
+              <div className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-[#14161b] p-3 text-xs">
+                <span className="font-semibold text-stone-300">
+                  Kitöltött kérdések: {answeredCount} / {quizList.length}
+                </span>
+                {answeredCount === quizList.length && (
+                  <span className="font-bold text-amber-400">
+                    Eredmény: {correctCount} / {quizList.length} helyes válasz! 🎉
+                  </span>
                 )}
               </div>
-            ))}
+
+              {/* Kérdések listája */}
+              {quizList.map((q, qIdx) => {
+                const selectedOpt = userAnswers[qIdx];
+                const isAnswered = selectedOpt !== undefined;
+
+                return (
+                  <div
+                    key={qIdx}
+                    className="rounded-2xl border border-[#3a3f4d] bg-[#14161b]/80 p-4 transition shadow-md"
+                  >
+                    <p className="mb-3 text-sm font-bold text-amber-300">
+                      {qIdx + 1}. {q.question}
+                    </p>
+
+                    <div className="mb-3 space-y-2">
+                      {q.options?.map((opt, oIdx) => {
+                        let btnStyle =
+                          "border-[#3a3f4d] bg-[#252833] text-stone-200 hover:bg-[#323645]";
+
+                        if (isAnswered) {
+                          if (opt === q.correct_answer) {
+                            btnStyle =
+                              "border-green-500 bg-green-950/60 text-green-200 font-semibold";
+                          } else if (opt === selectedOpt) {
+                            btnStyle =
+                              "border-red-500 bg-red-950/60 text-red-200 line-through opacity-80";
+                          } else {
+                            btnStyle =
+                              "border-[#2a2d37] bg-[#1a1c23] text-stone-500 opacity-50";
+                          }
+                        }
+
+                        return (
+                          <button
+                            key={oIdx}
+                            onClick={() => handleSelectOption(qIdx, opt)}
+                            disabled={isAnswered}
+                            className={`w-full text-left rounded-xl border p-2.5 text-xs transition duration-150 ${btnStyle}`}
+                          >
+                            <span className="mr-2 font-mono font-bold text-stone-400">
+                              {String.fromCharCode(65 + oIdx)}.
+                            </span>
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Magyarázat válaszadás után */}
+                    {isAnswered && q.explanation && (
+                      <div className="mt-3 rounded-xl border border-[#3a3f4d] bg-[#0d0f13] p-3 text-xs leading-relaxed text-stone-300">
+                        <strong className="text-amber-400">Magyarázat: </strong>
+                        {q.explanation}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+        {/* 3. GYIK NÉZET */}
+        {!resourceSubmitting && activeResourceMode === "faq" && (
+          <div className="space-y-3">
+            {localSubmitting && (
+              <p className="py-4 text-center text-xs text-amber-400">
+                GYIK adatok betöltése a szerverről...
+              </p>
+            )}
+
+            {faqError && (
+              <div className="rounded-2xl border border-red-500/50 bg-red-950/40 p-4 text-center">
+                <p className="mb-2 text-xs font-semibold text-red-300">
+                  ❌ {faqError}
+                </p>
+                <button
+                  onClick={fetchFaqData}
+                  className="rounded-xl bg-red-800/60 px-3 py-1 text-xs text-white transition hover:bg-red-700/80"
+                >
+                  Újrapróbálkozás
+                </button>
+              </div>
+            )}
+
+            {!localSubmitting && !faqError && kategoriak.length === 0 && (
+              <p className="py-4 text-center text-xs text-stone-400">
+                Nincsenek megjeleníthető GYIK adatok.
+              </p>
+            )}
+
+            {!localSubmitting &&
+              !faqError &&
+              kategoriak.map((cat, cIdx) => {
+                const catName = cat.nev || cat.név || `Kategória ${cIdx + 1}`;
+                const elemek = cat.elemek || [];
+
+                return (
+                  <div
+                    key={cIdx}
+                    className="overflow-hidden rounded-2xl border border-[#3a3f4d] bg-[#14161b]/80"
+                  >
+                    <button
+                      onClick={() => toggleCategory(cIdx)}
+                      className="flex w-full items-center justify-between bg-[#1a1d26] p-3 text-left font-bold text-white transition hover:bg-[#252833]"
+                    >
+                      <span className="text-sm text-amber-400">
+                        📁 {catName} ({elemek.length})
+                      </span>
+                      <span className="text-xs text-stone-400">
+                        {openCategories[cIdx] ? "▲ Bezár" : "▼ Nyit"}
+                      </span>
+                    </button>
+
+                    {openCategories[cIdx] && (
+                      <div className="space-y-2 border-t border-[#3a3f4d] p-3">
+                        {elemek.map((el, eIdx) => {
+                          const itemKey = `${cIdx}-${eIdx}`;
+                          const isOpen = openItems[itemKey];
+                          const kerdes = el.kerdes || el.kérdés || "Kérdés";
+                          const valasz = el.valasz || el.válasz || "Válasz";
+
+                          return (
+                            <div
+                              key={eIdx}
+                              className="overflow-hidden rounded-xl border border-[#3a3f4d] bg-[#14161b]"
+                            >
+                              <button
+                                onClick={() => toggleItem(cIdx, eIdx)}
+                                className="flex w-full items-center justify-between p-2.5 text-left text-xs font-semibold text-stone-200 transition hover:bg-[#252833]"
+                              >
+                                <span>❓ {kerdes}</span>
+                                <span className="text-stone-400">
+                                  {isOpen ? "−" : "+"}
+                                </span>
+                              </button>
+                              {isOpen && (
+                                <div className="border-t border-[#3a3f4d] bg-[#101216] p-2.5 text-xs leading-relaxed text-stone-300">
+                                  <span className="mr-1 font-bold text-amber-300">
+                                    Válasz:
+                                  </span>{" "}
+                                  {valasz}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
           </div>
         )}
 
-        {serverData?.citation && activeResourceMode === 'faq' && (
-          <p className="text-xs italic text-stone-400 mt-2">Hivatkozás: {serverData.citation}</p>
+        {/* Hivatkozás megjelenítése az alján */}
+        {serverData?.citation && !resourceSubmitting && !isMissingFileError && (
+          <p className="mt-2 text-xs italic text-stone-400">
+            Hivatkozás: {serverData.citation}
+          </p>
         )}
       </div>
-
-      {activeResourceMode !== 'faq' && (
-        <div className="flex gap-2 border-t border-[#3a3f4d] pt-3">
-          <input
-            type="text"
-            value={resourceInput}
-            onChange={(e) => setResourceInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleResourceFetch()}
-            placeholder="Írd be a keresendő témát / kulcsszót..."
-            className="flex-1 rounded-2xl border border-[#3a3f4d] bg-[#14161b] px-4 py-2 text-sm text-white outline-none focus:border-amber-400 shadow-inner"
-          />
-          <button
-            onClick={handleResourceFetch}
-            disabled={resourceSubmitting}
-            className="rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 text-sm font-bold text-stone-950 transition hover:brightness-110 disabled:opacity-50 shadow"
-          >
-            {resourceSubmitting ? 'Töltés...' : 'Lekérés'}
-          </button>
-        </div>
-      )}
     </section>
   );
 }

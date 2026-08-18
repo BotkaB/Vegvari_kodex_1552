@@ -11,6 +11,10 @@ export default function App() {
   const [presentationMode, setPresentationMode] = useState(false);
   const [activeResourceMode, setActiveResourceMode] = useState('faq');
   
+  // Állapotok a fájlok kezeléséhez
+  const [availableFiles, setAvailableFiles] = useState([]);
+  const [selectedFileUri, setSelectedFileUri] = useState('');
+
   const [selectedMentors, setSelectedMentors] = useState({
     mate_ba: true,
     ambrus_ba: true,
@@ -22,6 +26,7 @@ export default function App() {
     document_content: null,
     faq_content: null,
     quiz: null,
+    quizzes: null,
     citation: '',
   });
   
@@ -32,7 +37,7 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [chatSubmitting, setChatSubmitting] = useState(false);
 
-  // Új állapotok a hibakezeléshez és figyelmeztetésekhez
+  // Állapotok a hibakezeléshez és figyelmeztetésekhez
   const [quotaExhausted, setQuotaExhausted] = useState(false);
   const [warningMessage, setWarningMessage] = useState(null);
 
@@ -44,6 +49,20 @@ export default function App() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Fájllista automatikus lekérése a backendről
+  useEffect(() => {
+    if (user) {
+      fetch('/api/files')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.files && Array.isArray(data.files)) {
+            setAvailableFiles(data.files);
+          }
+        })
+        .catch((err) => console.error('❌ Hiba a fájlok lekérésekor:', err));
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -57,9 +76,11 @@ export default function App() {
     }));
   };
 
-  const handleResourceFetch = async () => {
-    const trimmed = resourceInput.trim();
-    if (!trimmed || resourceSubmitting) return;
+  const handleResourceFetch = async (overrideMode, overrideFileUri) => {
+    if (resourceSubmitting) return;
+
+    const modeToUse = overrideMode !== undefined ? overrideMode : activeResourceMode;
+    const fileUriToUse = overrideFileUri !== undefined ? overrideFileUri : selectedFileUri;
 
     setResourceSubmitting(true);
     setQuotaExhausted(false);
@@ -69,33 +90,39 @@ export default function App() {
       const res = await fetch('/api/resources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed, mode: activeResourceMode }),
+        body: JSON.stringify({ 
+          message: resourceInput.trim() || 'Generálj tartalmat a kiválasztott dokumentum alapján.', 
+          mode: modeToUse,
+          selectedFileUri: fileUriToUse || null 
+        }),
       });
+
       const data = await res.json();
 
-      // 429-es státusz vagy "elfogyott a keret" hiba kezelése
+      console.log("🔍 Szervertől kapott adatok:", data);
+
       if (res.status === 429 || data.error === 'elfogyott a keret') {
         setQuotaExhausted(true);
         throw new Error(data.details || 'Minden elérhető AI modell napi kvótája kimerült.');
       }
 
-      if (!res.ok) throw new Error(data.error || 'Hiba történt az erőforrás lekérdezésekor.');
+      if (!res.ok) {
+        throw new Error(data.error || data.details || 'Hiba történt az erőforrás lekérdezésekor.');
+      }
 
-      // Háttérbeli modellváltás figyelmeztetés kezelése
       if (data._warning) {
         setWarningMessage(data._warning);
       }
 
       setServerData({
-        document_content: data.document_content || null,
-        faq_content: data.faq_content || null,
-        quiz: data.quiz || null,
+        document_content: data.document_content || data.content || data.summary || null,
+        faq_content: data.faq_content || data.faq || null,
+        quiz: data.quiz || data.quizzes || null,
+        quizzes: data.quizzes || data.quiz || null,
         citation: data.citation || '',
       });
     } catch (err) {
-      if (!quotaExhausted) {
-        console.error(err.message);
-      }
+      console.error('❌ Hiba a Resource Engine hívásakor:', err.message);
     } finally {
       setResourceSubmitting(false);
     }
@@ -119,7 +146,6 @@ export default function App() {
       });
       const data = await res.json();
 
-      // 429-es státusz vagy "elfogyott a keret" hiba kezelése
       if (res.status === 429 || data.error === 'elfogyott a keret') {
         setQuotaExhausted(true);
         throw new Error(data.details || 'Minden elérhető AI modell napi kvótája kimerült.');
@@ -127,7 +153,6 @@ export default function App() {
 
       if (!res.ok) throw new Error(data.error || 'Hiba történt a mentor chat során.');
 
-      // Háttérbeli modellváltás figyelmeztetés kezelése
       if (data._warning) {
         setWarningMessage(data._warning);
       }
@@ -152,14 +177,12 @@ export default function App() {
         onLogout={handleLogout} 
       />
 
-      {/* Keret kimerülését jelző hiba sáv */}
       {quotaExhausted && (
         <div className="bg-red-900/90 border-b border-red-700 p-3 text-center text-sm font-semibold text-red-200">
           ⚠️ Elfogyott a keret: Minden elérhető AI modell napi kvótája kimerült. Kérjük, próbálja meg később.
         </div>
       )}
 
-      {/* Háttérbeli modellváltásról szóló figyelmeztető sáv */}
       {warningMessage && !quotaExhausted && (
         <div className="bg-amber-900/80 border-b border-amber-700 p-2 text-center text-xs font-semibold text-amber-200">
           ℹ️ {warningMessage}
@@ -171,10 +194,14 @@ export default function App() {
           activeResourceMode={activeResourceMode}
           setActiveResourceMode={setActiveResourceMode}
           serverData={serverData}
+          setServerData={setServerData}
           resourceInput={resourceInput}
           setResourceInput={setResourceInput}
           resourceSubmitting={resourceSubmitting}
           handleResourceFetch={handleResourceFetch}
+          availableFiles={availableFiles}
+          selectedFileUri={selectedFileUri}
+          setSelectedFileUri={setSelectedFileUri}
         />
 
         <MentorChat

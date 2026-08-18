@@ -1,0 +1,132 @@
+{
+  "title": "FAQ-1552: Gyakran Ismételt Kérdések a Végvári Új Belépők Részére",
+  "publisher": "HR & Végvári Kommunikációs Osztály",
+  "status": "Hivatalos Végvári Tudásbázis",
+  "citation": "FAQ-1552.pdf (Hivatalos Végvári Tudásbázis)",
+  "kategoriak": [
+    {
+      "id": "kat-1",
+      "nev": "Távmunka, Jelenlét és Fegyelem (Home Office & Daily Operations)",
+      "elemek": [
+        {
+          "id": 1,
+          "kerdes": "Szabad-e átmenni a török táborba kávézni, ha a janicsár szomszédom átkiabált, hogy megkínál?",
+          "valasz": "Határozottan NEM. Bár a „feketekávé” nevű oszmán frissítő csábítóan hangzik, a török táborban történő bármilyen jellegű szociális jelenlét az 1. sz. Home Office Szabályzat 3. pontja alapján azonnali hazaárulási fegyelmi eljárást és kötél általi szankciót von maga után. A \"csak megkóstoltam a zaccot\" nem elfogadható enyhítő körülmény."
+        },
+        {
+          "id": 2,
+          "kerdes": "Vehetek fel kényelmes macskanadrágot vagy köpenyt a páncél helyett, ha nagyon meleg van a bástyán?",
+          "valasz": "NEM. A katonai állományra szigorú Dress Code vonatkozik (1. sz. Szabályzat 6. pont). A páncél és sisak elhagyása „lazulásból” azonnali írásbeli intőt von maga után. Kivételt képeznek az egri nők, akiknek a szoknya megkötése engedélyezett a forró szurok hatékonyabb mozgatása érdekében."
+        },
+        {
+          "id": 3,
+          "kerdes": "Bálint pap úr imája alatt kimehetek-e egy kicsit pihenni, vagy az imaidő alatt is őrt kell állnom?",
+          "valasz": "A vallási kedvezmény a papokra vonatkozik (1. sz. Szabályzat 9. pont). Az őrszolgálatban lévő vitéz imádság közben is köteles a lőrést figyelni. Az ima alatti elalvás vagy relaxáció defetizmusnak minősül, és kazamatabezárással büntetendő."
+        },
+        {
+          "id": 4,
+          "kerdes": "Ha a csatában elszakad a ruhám, átöltözhetek-e egy török janicsártól elvett kaftánba, mert az melegebb?",
+          "valasz": "SZIGORÚAN TILOS! Az idegen egyenruha viselése a várfalakon belül – előre bejelentett hadicsel hiányában – a saját bajtársaid általi véletlen baráti tűzhöz (Friendly Fire) vezet (1. sz. Szabályzat 6. pont). Ha török ruhában flangálsz a várudvaron, ne csodálkozz, ha leöntik a nyakadba a forró levest."
+        },
+        {
+          "id": 5,
+          "kerdes": "Nyáron a hőségben lehet-e a várárokban vagy a belső kutakban fürdeni?",
+          "valasz": "TILOS! A belső kutak ivóvízkészlete a legmagasabb stratégiai védelem alatt áll. A kútban való fürdés vagy lábmosás fertőzésveszélyes és a vízkészlet szabotázsának minősül. A várárokban való fürdőzés pedig a nyilvánvaló célponttá válás miatt büntetendő."
+        }
+      ]
+    },
+    {
+      "id": "kat-2",
+      "nev": "Élelmezés, Raktározás és Eszközhasználat (Logistics & R&D)",
+      "elemek": [
+        {
+          "id": 6,
+          "kerdes": "Nagyon éhes vagyok a bástyaügyeletben. Megehetem-e a tartalék gabonát vagy a borsót a raktári tálból?",
+          "valasz": "SZIGORÚAN TILOS. A raktári készletek a vár teljes lakosságának szigorúan porciózott fejadagjai (1. sz. Home Office Szabályzat 8. pont). A készletek egyéni megdézsmálása, vagy a nyers borsó tálból való csipegetése súlyos vétség. Büntetése: 3 nap szárazkenyér-diéta a tömlöcbástyában és kötelező szurokfőzés."
+        },
+        {
+          "id": 7,
+          "kerdes": "A várfalon találtam egy óriási, gördülő fadarabot, amire kötél meg lőporos hordó van szerelve. Kisüthetem rajta a hallgátag ebédemet, ha begyújtom?",
+          "valasz": "DEHOGYIS! Az a Bornemissza-féle „Tüzes Kerék” prototípus. A 1. sz. Szabályzat 8. pontja és a 5. sz. Beszerzési Irányelvek értelmében a kísérleti harci eszközök nyílt lánggal történő melegítésre, szalonna- vagy lángossütésre való használata szigorúan tilos és életveszélyes."
+        },
+        {
+          "id": 8,
+          "kerdes": "Lőttem egy finomnak tűnő oszmán tüzérségi galambot. Átvihetem a várkonyhára, hogy megsüssék nekem vacsorára?",
+          "valasz": "CSAK INSPEKCIÓ UTÁN. Az elfogott galamb a 3. sz. NDA 3. pontja alapján adathordozónak minősül. A galamb lábán lévő üzenetet azonnal át kell adni a Távközlési Osztálynak adatszivárgás-vizsgálat céljából. A galamb csak a levél eltávolítása és a biztonsági ellenőrzés után kerülhet a konyhára."
+        },
+        {
+          "id": 9,
+          "kerdes": "Ha Bornemissza Gergely hadnagytól kölcsönkérek egy kis lőport, megtölthetem vele a saját házilag barkácsolt vakondriasztómat?",
+          "valasz": "HATÁROZOTTAN NEM. A lőpor stratégiai alapanyag, amelyet a 5. sz. Beszerzési Irányelvek 6. pontja alapján szigorúan ellenőrzött körülmények között tárolunk. Lőpor magáncélú elhordása vagy robbantgatási kísérletezések végzése azonnali fegyelmi eljárást és a legmagasabb bástyára való beosztást vonja maga után."
+        },
+        {
+          "id": 10,
+          "kerdes": "Ha leáll az ostrom, és szünet van a rohamok között, kiültethetek tulipánokat a belső udvarra, hogy szebb legyen a környezet?",
+          "valasz": "NEM. A várudvar és a sáncok területe kizárólag katonai és logisztikai feladatokra használható (1. sz. Szabályzat 8. pont). A virágágyások kialakítása akadályozza a szekerek és az ágyúgolyók gyors mozgatását, ráadásul az oszmán tulipánok ültetése defetista szimbólumnak minősül."
+        }
+      ]
+    },
+    {
+      "id": "kat-3",
+      "nev": "Biztonság, Titoktartás és Árulás (Security & Compliance)",
+      "elemek": [
+        {
+          "id": 11,
+          "kerdes": "A várudvaron találtam egy nagyon szép, csillogó aranygyűrűt egy félszemű embertől. Megtarthatom, vagy odaadhatom neki, ha nagyon kéri?",
+          "valasz": "TILOS! Ez a klasszikus Jumurdzsák-féle adatszivárgási rés. A 3. sz. Adatvédelmi és Titoktartási Nyilatkozat (NDA) 5. pontja értelmében minden talált amulettet, talizmánt és gyűrűt azonnal le kell adni a vár raktárkezelőjénél (vagy Bornemissza Gergelynél). Ha a félszemű dervis a gyermeked elrablásával fenyegetőzik, ne tárgyalj vele, hanem értesítsd a legközelebbi hadnagyot!"
+        },
+        {
+          "id": 12,
+          "kerdes": "Rajzolhatok egy kis térképet a titkos alagutakról a barátomnak, hogy könnyebben megtalálja a pincét, ahol a bort tároljuk?",
+          "valasz": "SZIGORÚAN TILOS! A kazamaták és alagutak koordinátái a 3. sz. NDA 1. és 2. pontja alapján szigorúan bizalmas belső adatnak minősülnek. Bármilyen térkép másolása, rajzolása vagy harmadik félnek történő megmutatása hazaárulási eljárást és karmikus büntetést von maga után."
+        },
+        {
+          "id": 13,
+          "kerdes": "Ha a barátom éjszaka megpróbálja kinyitni a várkaput a töröknek, mert aranyat ígértek neki, szólnom kell a vezetőségnek, vagy intézzük el egymás között?",
+          "valasz": "AZONNAL JELENTENI KELL! Ez a P0-s árulási kategória (2. sz. Eszkalációs Szabályzat 6. pontja, a „Hegedüs-Protokoll”). Az árulás eltitkolása bűnrészességnek minősül. A tettenért árulókat az SLA értelmében 15 percen belül be kell börtönözni, és a várfokon elrettentő szankciót kell alkalmazni."
+        },
+        {
+          "id": 14,
+          "kerdes": "Elmondhatom a várba érkező vándorcigány kártyajósnak, hogy hány napra való vizünk maradt, ha cserébe megmondja a jövőmet?",
+          "valasz": "NEM! A vár készletadatai szigorúan bizalmasak (3. sz. NDA 1. és 9. pont). A külsős alvállalkozóknak, jóslást végző szomszédoknak vagy követeknek történő adatszivárogtatás büntetendő. A jövődet amúgy is megmondja Dobó kapitány: kemény harc vár rád!"
+        },
+        {
+          "id": 15,
+          "kerdes": "Mi történik, ha véletlenül elejtek egy titkos parancsot tartalmazó levelet a várudvaron?",
+          "valasz": "Azonnal jelentened kell az Adatszivárgási Incidenst (Data Breach) a felettesednél (3. sz. NDA 3. és 8. pont). Ha a levelet megtalálod, azonnal el kell égetned vagy be kell kapnod. Ha a levél török kézre kerül, a mulasztásért szurokhordási büntetés jár."
+        }
+      ]
+    },
+    {
+      "id": "kat-4",
+      "nev": "Eszkaláció, Műveletek és Karrier (Operations & HR)",
+      "elemek": [
+        {
+          "id": 16,
+          "kerdes": "Mit tegyek, ha nem tetszik a beosztásom, és személyesen Dobó István kapitány úrnak szeretnék panaszkodni a kényelmetlen lőrés miatt?",
+          "valasz": "NE tedd! A 2. sz. Eszkalációs Szabályzat 1. és 10. pontja értelmében a szolgálati út átugrása fegyelmi vétség. A panaszoddal először a Tizedeshez vagy a Hadnagyodhoz fordulj. Ha közvetlenül Dobó kapitányra töröd rá az ajtót egy kényelmetlen lőrés miatt, büntetésből 50 vödör forró szurkot cipelhetsz fel a Dobó-bástyára."
+        },
+        {
+          "id": 17,
+          "kerdes": "Ha meglátok egy janicsárt a létrán mászni felfelé, kell-e engedélyt kérnem a hadnagytól, mielőtt rázúdítom a forró levest?",
+          "valasz": "NEM KELL! Az 2. sz. Eszkalációs Szabályzat 8. pontja (SOP-WOMEN-01) és a P1-es kritikus incidens-protokoll értelmében a várba behatoló ellenség elhárítása azonnali, önálló végrehajtási hatáskörbe tartozik. A forró leves, szurok vagy kő azonnali nyakába öntése kifejezetten ajánlott!"
+        },
+        {
+          "id": 18,
+          "kerdes": "Kaphatok-e szabi-kedvezményt vagy „szabadnapot”, ha a gyerekkori szerelmemet kell kimentenem egy idegen várból (pl. Fogarasból)?",
+          "valasz": "Hivatalos szabadnap erre nincs, de a 4. sz. Onboarding Kézikönyv 5. és 8. pontja alapján, ha a feladatot sikeresen, a vár védelmének veszélyeztetése nélkül hajtod végre, a HR utólagosan „Rendkívüli Hősies Teljesítményként” regisztrálhatja, és előléptetés járhat érte."
+        },
+        {
+          "id": 19,
+          "kerdes": "Ha elcsúszom a szurokkiöntés közben és megfájdul a bokám, elmehetek egyből haza pihenni?",
+          "valasz": "NEM. A vár elhagyása szigorúan tilos (1. sz. Szabályzat 2. pont). Sérülés esetén azonnal a vár ispotályába kell vonulnod (1. sz. Szabályzat 7. pont), ahol az ápolók ellátnak. Amint a bokád kibírja a megállást, köteles vagy visszatérni a kijelölt őrhelyedre."
+        },
+        {
+          "id": 20,
+          "kerdes": "Hogyan lehetek egyszerű jobbágygyerekből vagy apródból főhadnagy, mint Bornemissza Gergely?",
+          "valasz": "A 4. sz. Onboarding Kézikönyv 1. és 7. pontja értelmében a karrierépítés kulcsa a szorgalom, a fegyelem, a lőpor szagának bírása és az innovatív hadicselek bemutatása. Ha sikeres projektet mutatsz be a Managementnek (pl. működő harci szerkezet), a gyors előléptetés garantált."
+        }
+      ]
+    }
+  ]
+}

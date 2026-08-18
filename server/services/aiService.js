@@ -19,7 +19,7 @@ const MODEL_CHAIN = [
   "gemini-3-flash",
 ];
 
-// Mentor Chat elvárt JSON válaszstruktúrája (JSON Schema)
+// Mentor Chat elvárt JSON válaszstruktúrája
 const MENTOR_CHAT_SCHEMA = {
   type: "object",
   properties: {
@@ -44,14 +44,44 @@ const MENTOR_CHAT_SCHEMA = {
   ],
 };
 
-// Tároló a feltöltött fájlok hivatkozásai számára
+// Resource Engine elvárt JSON válaszstruktúrája
+const RESOURCE_ENGINE_SCHEMA = {
+  type: "object",
+  properties: {
+    mode: { type: "string" },
+    citation: { type: "string" },
+    document_content: {
+      type: "object",
+      properties: {
+        title: { type: "string" },
+        text: { type: "string" },
+      },
+      nullable: true,
+    },
+    quizzes: {
+      type: "array",
+      nullable: true,
+      items: {
+        type: "object",
+        properties: {
+          question: { type: "string" },
+          options: { type: "array", items: { type: "string" } },
+          correct_answer: { type: "string" },
+          explanation: { type: "string" },
+        },
+        required: ["question", "options", "correct_answer", "explanation"],
+      },
+    },
+  },
+  required: ["mode", "citation"],
+};
+
 let uploadedFiles = [];
 let aiClient = null;
 
-// Dinamikus/Lazy inicializáló függvény: csak akkor fut le, amikor tényleg szükség van az AI-ra
 export function getAi() {
   if (!aiClient) {
-    dotenv.config(); // Biztosítjuk, hogy a .env be legyen olvasva
+    dotenv.config();
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
       aiClient = new GoogleGenAI({ apiKey });
@@ -67,13 +97,11 @@ const sanitizeFileName = (str) => {
     .replace(/[^a-zA-Z0-9.\-_]/g, "_");
 };
 
-// ========== DOKUMENTUMOK INICIALIZÁLÁSA ==========
 export async function initializeDocuments(dataDir) {
   const ai = getAi();
-
   if (!ai) {
     console.warn(
-      "⚠️ Nem található Gemini API kulcs, a dokumentumok feltöltése kihagyva.",
+      "⚠️ Nem található Gemini API kulcs, a dokumentumok feltöltése kihagyva."
     );
     return;
   }
@@ -96,12 +124,10 @@ export async function initializeDocuments(dataDir) {
 
     console.log("🔍 Fájlok állapotának ellenőrzése a Google File API-ban...");
 
-    // Lekérjük a Google File API-n már meglévő fájlok listáját
     const remoteFileMap = new Map();
     try {
       const listResponse = await ai.files.list();
-
-      // Az új @google/genai SDK AsyncIterable (for await) struktúrájának kezelése
+      
       if (
         listResponse &&
         typeof listResponse[Symbol.asyncIterator] === "function"
@@ -114,7 +140,6 @@ export async function initializeDocuments(dataDir) {
         const filesArray = Array.isArray(listResponse)
           ? listResponse
           : listResponse?.files || [];
-
         for (const remoteFile of filesArray) {
           const key = remoteFile.displayName || remoteFile.name;
           if (key) remoteFileMap.set(key, remoteFile);
@@ -123,13 +148,11 @@ export async function initializeDocuments(dataDir) {
     } catch (listError) {
       console.warn(
         "⚠️ Nem sikerült lekérni a távoli fájllistát, szükség esetén újra feltöltjük:",
-        listError.message,
+        listError.message
       );
     }
 
-    // Lista ürítése
     uploadedFiles = [];
-
     for (const file of files) {
       const filePath = path.join(dataDir, file);
 
@@ -141,7 +164,6 @@ export async function initializeDocuments(dataDir) {
       const cleanDisplayName = sanitizeFileName(file);
       const existingRemote = remoteFileMap.get(cleanDisplayName);
 
-      // Ha már fel van töltve a Google-re, nem töltjük fel újra!
       if (existingRemote) {
         uploadedFiles.push({
           displayName: cleanDisplayName,
@@ -151,9 +173,7 @@ export async function initializeDocuments(dataDir) {
             mimeType: existingRemote.mimeType || mimeType,
           },
         });
-        console.log(
-          `  ✅ Megtalálva (már fel van töltve): ${cleanDisplayName}`,
-        );
+        console.log(`  ✅ Megtalálva (már fel van töltve): ${cleanDisplayName}`);
       } else {
         console.log(`  📤 Új fájl feltöltése: ${cleanDisplayName}...`);
         const uploadResult = await ai.files.upload({
@@ -172,19 +192,15 @@ export async function initializeDocuments(dataDir) {
             mimeType: uploadResult.mimeType || mimeType,
           },
         });
-
         console.log(`  ✅ Sikeresen feltöltve: ${cleanDisplayName}`);
       }
     }
 
     console.log(
-      "✨ Valamennyi dokumentum sikeresen csatolva a Gemini motorhoz!",
+      "✨ Valamennyi dokumentum sikeresen csatolva a Gemini motorhoz!"
     );
   } catch (error) {
-    console.error(
-      "❌ Hiba a dokumentumok induláskori feldolgozása közben:",
-      error,
-    );
+    console.error("❌ Hiba az inicializáláskor:", error);
   }
 }
 
@@ -192,12 +208,11 @@ export function getUploadedFiles() {
   return uploadedFiles;
 }
 
-// ========== AI GENERÁLÁS TARTALÉK LÁNCCAL (FALLBACK) ==========
 async function generateContentWithFallback(
   contents,
   systemInstruction,
   temperature = 0.5,
-  responseSchema = null,
+  responseSchema = null
 ) {
   const ai = getAi();
   if (!ai) throw new Error("A Gemini API kulcs nincs beállítva.");
@@ -227,9 +242,7 @@ async function generateContentWithFallback(
       let warning = null;
       if (i > 0) {
         warning = `Az elsődleges AI modell túlterhelt volt, az alábbira váltottunk: ${modelName}`;
-        console.log(
-          `ℹ️ [MODEL FALLBACK] Sikeres hívás ezzel a modellel: ${modelName}`,
-        );
+        console.log(`ℹ️ [MODEL FALLBACK] Sikeres hívás ezzel a modellel: ${modelName}`);
       }
 
       return {
@@ -237,15 +250,11 @@ async function generateContentWithFallback(
         ...(warning ? { _warning: warning } : {}),
       };
     } catch (err) {
-      console.warn(
-        `⚠️ Hiba a(z) '${modelName}' modell használatakor:`,
-        err.message || err,
-      );
+      console.warn(`⚠️ Hiba a(z) '${modelName}' modellnél:`, err.message || err);
       lastError = err;
     }
   }
 
-  // Ha az összes modell kimerült, a frontend (App.jsx) által elvárt formátumú hibát dobunk
   const quotaError = new Error("elfogyott a keret");
   quotaError.status = 429;
   quotaError.details = "Minden elérhető AI modell napi kvótája kimerült.";
@@ -253,11 +262,8 @@ async function generateContentWithFallback(
   throw quotaError;
 }
 
-// ========== MENTOR CHAT HÍVÁS ==========
 export async function callMentorChat(userMessage, activeMentors) {
   const fileParts = uploadedFiles.map((f) => ({ fileData: f.fileData }));
-
-  // Egyetlen "user" Content objektumba helyezzük a fájlokat ÉS a promptot
   const contents = [
     {
       role: "user",
@@ -274,31 +280,22 @@ export async function callMentorChat(userMessage, activeMentors) {
     contents,
     MENTOR_CHAT_PROMPT,
     0.6,
-    MENTOR_CHAT_SCHEMA,
+    MENTOR_CHAT_SCHEMA
   );
 }
 
-// ========== RESOURCE ENGINE HÍVÁS ==========
 export async function callResourceEngine(
   mode,
-  selectedChapter,
-  selectedFileUri = null,
+  selectedChapter = null,
+  selectedFileUri = null
 ) {
-  let targetFiles = uploadedFiles;
+  const foundFile = selectedFileUri
+    ? uploadedFiles.find((f) => f.fileData.fileUri === selectedFileUri)
+    : null;
 
-  if (selectedFileUri) {
-    const foundFile = uploadedFiles.find(
-      (f) => f.fileData.fileUri === selectedFileUri,
-    );
-    if (foundFile) {
-      targetFiles = [foundFile];
-    }
-  }
+  const fileParts = foundFile ? [{ fileData: foundFile.fileData }] : [];
+  const promptText = `Kért mód: ${mode}. ${selectedChapter ? `Fejezet: ${selectedChapter}. ` : ""}Generáld a tartalmat szigorúan csak a csatolt dokumentum alapján!`;
 
-  const fileParts = targetFiles.map((f) => ({ fileData: f.fileData }));
-  const promptText = `Kért mód: ${mode}. Kiválasztott fejezet/kontextus: ${selectedChapter || "Összes dokumentum"}`;
-
-  // Egyetlen "user" Content objektumba helyezzük a fájlokat ÉS a promptot
   const contents = [
     {
       role: "user",
@@ -310,5 +307,6 @@ export async function callResourceEngine(
     contents,
     RESOURCE_ENGINE_PROMPT,
     0.4,
+    RESOURCE_ENGINE_SCHEMA
   );
 }
