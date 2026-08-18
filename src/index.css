@@ -39,6 +39,43 @@ input {
   font: inherit;
 }
 
+/* Akadálymentesítési segédosztály képernyőolvasókhoz (Screen Reader Only) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Billentyűzetes fókusz jelölése a nem Tailwind-es vagy natív elemekhez */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
+}
+
+/* Mozgáscsökkentési támogatás (Reduced Motion) */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Egyedi középkori görgetősáv */
 ::-webkit-scrollbar {
   width: 8px;

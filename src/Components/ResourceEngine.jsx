@@ -136,7 +136,7 @@ export function ResourceEngine({
   const isMissingFileError = serverData?.citation === "Nincs megfelelő dokumentum kiválasztva.";
 
   return (
-    <section className="flex flex-col rounded-3xl border border-[#3a3f4d] bg-[#1f222b]/90 p-4 shadow-xl">
+    <section className="flex flex-col rounded-3xl border border-[#3a3f4d] bg-[#1f222b]/90 p-4 shadow-xl" aria-label="Erőforrás Motor szekció">
       {/* Fejléc és Módválasztó */}
       <div className="mb-3 flex flex-col gap-3 border-b border-[#3a3f4d] pb-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-xl font-bold tracking-wide text-amber-400">
@@ -145,11 +145,13 @@ export function ResourceEngine({
 
         {/* Dokumentumválasztó legördülő */}
         <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor="document-select" className="sr-only">Dokumentum kiválasztása</label>
           <select
+            id="document-select"
             value={selectedFileUri || ""}
             onChange={(e) => handleFileChange(e.target.value)}
             disabled={resourceSubmitting}
-            className="rounded-xl border border-[#3a3f4d] bg-[#14161b] px-3 py-1 text-xs text-stone-200 outline-none shadow-inner focus:border-amber-400 disabled:opacity-50"
+            className="rounded-xl border border-[#3a3f4d] bg-[#14161b] px-3 py-1 text-xs text-stone-200 outline-none shadow-inner focus:border-amber-400 focus:ring-2 focus:ring-amber-400 disabled:opacity-50"
           >
             <option value="" disabled>
               -- Válassz dokumentumot --
@@ -162,7 +164,7 @@ export function ResourceEngine({
           </select>
 
           {/* Módválasztó gombok */}
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1" role="group" aria-label="Erőforrás módok">
             {[
               { id: "faq", label: "GYIK" },
               { id: "quiz_generation", label: "Kvíz (5 kérdés)" },
@@ -173,7 +175,8 @@ export function ResourceEngine({
                 onClick={() => handleModeChange(m.id)}
                 disabled={resourceSubmitting || (m.id !== "faq" && !selectedFileUri)}
                 title={m.id !== "faq" && !selectedFileUri ? "Előbb válassz ki egy dokumentumot!" : ""}
-                className={`rounded-xl px-2.5 py-1 text-xs font-semibold shadow-sm transition disabled:opacity-40 ${
+                aria-pressed={activeResourceMode === m.id}
+                className={`rounded-xl px-2.5 py-1 text-xs font-semibold shadow-sm transition disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-amber-400 ${
                   activeResourceMode === m.id
                     ? "bg-amber-500 font-bold text-stone-950"
                     : "border border-[#3a3f4d] bg-[#14161b] text-stone-300 hover:bg-[#252833]"
@@ -187,11 +190,11 @@ export function ResourceEngine({
       </div>
 
       {/* Fő tartalom megjelenítő terület */}
-      <div className="mb-2 max-h-[60vh] flex-1 space-y-4 overflow-y-auto text-stone-300">
+      <div className="mb-2 max-h-[60vh] flex-1 space-y-4 overflow-y-auto text-stone-300" role="region" aria-label="Erőforrás tartalom">
         {/* AI Töltés kijelzése */}
         {resourceSubmitting && (
-          <div className="flex flex-col items-center justify-center space-y-2 py-12 text-amber-400">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-400 border-t-transparent"></div>
+          <div className="flex flex-col items-center justify-center space-y-2 py-12 text-amber-400" aria-live="polite">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" aria-hidden="true"></div>
             <p className="text-xs font-semibold">
               Az AI éppen feldolgozza a dokumentumot...
             </p>
@@ -200,7 +203,7 @@ export function ResourceEngine({
 
         {/* AI Hibaüzenet kezelése, ha nincs fájl kiválasztva */}
         {!resourceSubmitting && isMissingFileError && (
-          <div className="rounded-2xl border border-amber-500/50 bg-amber-950/30 p-6 text-center space-y-2">
+          <div className="rounded-2xl border border-amber-500/50 bg-amber-950/30 p-6 text-center space-y-2" role="alert">
             <p className="text-sm font-bold text-amber-300">⚠️ Figyelem</p>
             <p className="text-xs text-stone-300">
               Kérlek, válassz ki egy konkrét dokumentumot a felső legördülő menüből a kvíz vagy az összefoglaló generálásához!
@@ -230,7 +233,7 @@ export function ResourceEngine({
           quizList.length > 0 && (
             <div className="space-y-4">
               {/* Eredményjelző sáv */}
-              <div className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-[#14161b] p-3 text-xs">
+              <div className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-[#14161b] p-3 text-xs" aria-live="polite">
                 <span className="font-semibold text-stone-300">
                   Kitöltött kérdések: {answeredCount} / {quizList.length}
                 </span>
@@ -255,7 +258,7 @@ export function ResourceEngine({
                       {qIdx + 1}. {q.question}
                     </p>
 
-                    <div className="mb-3 space-y-2">
+                    <div className="mb-3 space-y-2" role="group" aria-label={`${qIdx + 1}. kérdés válaszlehetőségei`}>
                       {q.options?.map((opt, oIdx) => {
                         let btnStyle =
                           "border-[#3a3f4d] bg-[#252833] text-stone-200 hover:bg-[#323645]";
@@ -278,9 +281,10 @@ export function ResourceEngine({
                             key={oIdx}
                             onClick={() => handleSelectOption(qIdx, opt)}
                             disabled={isAnswered}
-                            className={`w-full text-left rounded-xl border p-2.5 text-xs transition duration-150 ${btnStyle}`}
+                            aria-pressed={selectedOpt === opt}
+                            className={`w-full text-left rounded-xl border p-2.5 text-xs transition duration-150 focus:outline-none focus:ring-2 focus:ring-amber-400 ${btnStyle}`}
                           >
-                            <span className="mr-2 font-mono font-bold text-stone-400">
+                            <span className="mr-2 font-mono font-bold text-stone-400" aria-hidden="true">
                               {String.fromCharCode(65 + oIdx)}.
                             </span>
                             {opt}
@@ -291,7 +295,7 @@ export function ResourceEngine({
 
                     {/* Magyarázat válaszadás után */}
                     {isAnswered && q.explanation && (
-                      <div className="mt-3 rounded-xl border border-[#3a3f4d] bg-[#0d0f13] p-3 text-xs leading-relaxed text-stone-300">
+                      <div className="mt-3 rounded-xl border border-[#3a3f4d] bg-[#0d0f13] p-3 text-xs leading-relaxed text-stone-300" role="note">
                         <strong className="text-amber-400">Magyarázat: </strong>
                         {q.explanation}
                       </div>
@@ -306,19 +310,19 @@ export function ResourceEngine({
         {!resourceSubmitting && activeResourceMode === "faq" && (
           <div className="space-y-3">
             {localSubmitting && (
-              <p className="py-4 text-center text-xs text-amber-400">
+              <p className="py-4 text-center text-xs text-amber-400" aria-live="polite">
                 GYIK adatok betöltése a szerverről...
               </p>
             )}
 
             {faqError && (
-              <div className="rounded-2xl border border-red-500/50 bg-red-950/40 p-4 text-center">
+              <div className="rounded-2xl border border-red-500/50 bg-red-950/40 p-4 text-center" role="alert">
                 <p className="mb-2 text-xs font-semibold text-red-300">
                   ❌ {faqError}
                 </p>
                 <button
                   onClick={fetchFaqData}
-                  className="rounded-xl bg-red-800/60 px-3 py-1 text-xs text-white transition hover:bg-red-700/80"
+                  className="rounded-xl bg-red-800/60 px-3 py-1 text-xs text-white transition hover:bg-red-700/80 focus:outline-none focus:ring-2 focus:ring-red-400"
                 >
                   Újrapróbálkozás
                 </button>
@@ -344,12 +348,13 @@ export function ResourceEngine({
                   >
                     <button
                       onClick={() => toggleCategory(cIdx)}
-                      className="flex w-full items-center justify-between bg-[#1a1d26] p-3 text-left font-bold text-white transition hover:bg-[#252833]"
+                      aria-expanded={Boolean(openCategories[cIdx])}
+                      className="flex w-full items-center justify-between bg-[#1a1d26] p-3 text-left font-bold text-white transition hover:bg-[#252833] focus:outline-none focus:ring-2 focus:ring-amber-400"
                     >
                       <span className="text-sm text-amber-400">
                         📁 {catName} ({elemek.length})
                       </span>
-                      <span className="text-xs text-stone-400">
+                      <span className="text-xs text-stone-400" aria-hidden="true">
                         {openCategories[cIdx] ? "▲ Bezár" : "▼ Nyit"}
                       </span>
                     </button>
@@ -369,10 +374,11 @@ export function ResourceEngine({
                             >
                               <button
                                 onClick={() => toggleItem(cIdx, eIdx)}
-                                className="flex w-full items-center justify-between p-2.5 text-left text-xs font-semibold text-stone-200 transition hover:bg-[#252833]"
+                                aria-expanded={Boolean(isOpen)}
+                                className="flex w-full items-center justify-between p-2.5 text-left text-xs font-semibold text-stone-200 transition hover:bg-[#252833] focus:outline-none focus:ring-2 focus:ring-amber-400"
                               >
                                 <span>❓ {kerdes}</span>
-                                <span className="text-stone-400">
+                                <span className="text-stone-400" aria-hidden="true">
                                   {isOpen ? "−" : "+"}
                                 </span>
                               </button>

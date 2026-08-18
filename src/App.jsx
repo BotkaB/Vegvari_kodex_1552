@@ -165,7 +165,7 @@ export default function App() {
     }
   };
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center bg-[#16181d] text-stone-400">Betöltés...</div>;
+  if (loading) return <div className="flex min-h-screen items-center justify-center bg-[#16181d] text-stone-400" role="status" aria-live="polite">Betöltés...</div>;
   if (!user) return <LoginForm onLogin={setUser} />;
 
   return (
@@ -178,13 +178,13 @@ export default function App() {
       />
 
       {quotaExhausted && (
-        <div className="bg-red-900/90 border-b border-red-700 p-3 text-center text-sm font-semibold text-red-200">
+        <div className="bg-red-900/90 border-b border-red-700 p-3 text-center text-sm font-semibold text-red-200" role="alert">
           ⚠️ Elfogyott a keret: Minden elérhető AI modell napi kvótája kimerült. Kérjük, próbálja meg később.
         </div>
       )}
 
       {warningMessage && !quotaExhausted && (
-        <div className="bg-amber-900/80 border-b border-amber-700 p-2 text-center text-xs font-semibold text-amber-200">
+        <div className="bg-amber-900/80 border-b border-amber-700 p-2 text-center text-xs font-semibold text-amber-200" role="status" aria-live="polite">
           ℹ️ {warningMessage}
         </div>
       )}
