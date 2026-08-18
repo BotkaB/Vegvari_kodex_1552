@@ -140,6 +140,9 @@ export function ResourceEngine({
         <h2 className="text-xl font-bold tracking-wide text-amber-400">
           📖 Erőforrás Motor
         </h2>
+        <p className="text-[10px] text-amber-400 font-medium uppercase tracking-wider mt-0.5 opacity-90">
+         Mesterséges intelligencia alapú kvízgenerálás, javítás és dokumentum-összefoglalás
+        </p>
 
         {/* Dokumentumválasztó legördülő */}
         <div className="flex flex-wrap items-center gap-2">
@@ -184,6 +187,7 @@ export function ResourceEngine({
               </button>
             ))}
           </div>
+
         </div>
       </div>
 

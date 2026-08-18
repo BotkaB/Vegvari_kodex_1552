@@ -10,7 +10,7 @@ export function MentorChat({
   return (
     <section className="flex flex-col rounded-3xl border border-[#3a3f4d] bg-[#1f222b]/90 p-4 shadow-xl" aria-label="Mentor Chat szekció">
       <div className="mb-3 flex items-center justify-between border-b border-[#3a3f4d] pb-3">
-        <h2 className="text-xl font-bold text-amber-400 tracking-wide">👥 Mentor Chat</h2>
+        <h2 className="text-xl font-bold text-amber-400 tracking-wide">👥 Mentor Chat - mesterséges intelligencia által generált válaszok</h2>
       </div>
 
       <div className="mb-3 flex items-center justify-between rounded-2xl bg-[#14161b]/70 p-2 border border-[#3a3f4d]">
