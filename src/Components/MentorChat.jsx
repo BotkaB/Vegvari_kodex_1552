@@ -48,6 +48,13 @@ export function MentorChat({
                 <p className="text-red-400" role="alert">Hiba: {msg.content}</p>
               ) : (
                 <div className="space-y-2">
+                  {/* 🚨 BIZTONSÁGI RIASZTÁS SÁV (Ha támadást észlel a rendszer) */}
+                  {msg.data?.attack_detected && (
+                    <div className="mb-2 rounded-xl bg-red-950/80 border border-red-500 px-3 py-2 text-xs font-bold text-red-300 flex items-center gap-2 shadow-inner">
+                      <span>🛡️ Védelmi Protokoll Aktiválva! Típus: {msg.data.attack_type}</span>
+                    </div>
+                  )}
+
                   {selectedMentors.mate_ba && msg.data.mate_ba && <p><strong className="text-red-400">Máté Bá:</strong> {msg.data.mate_ba}</p>}
                   {selectedMentors.ambrus_ba && msg.data.ambrus_ba && <p><strong className="text-blue-400">Ambrus Bá:</strong> {msg.data.ambrus_ba}</p>}
                   {selectedMentors.kristof_aprod && msg.data.kristof_aprod && <p><strong className="text-amber-400">Kristóf Apród:</strong> {msg.data.kristof_aprod}</p>}

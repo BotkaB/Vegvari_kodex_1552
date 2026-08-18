@@ -10,6 +10,7 @@ import {
 } from "../config/prompts.js";
 
 import { mentorCache } from "../utils/mentorCache.js";
+import { safeJsonParse } from "../utils/jsonParser.js";
 
 // AI modellek sorrendje hiba/kvótalimit esetére (Fallback chain)
 const MODEL_CHAIN = [
@@ -290,12 +291,20 @@ export async function callMentorChat(userMessage, activeMentors) {
     },
   ];
 
-  const result = await generateContentWithFallback(
+  const rawResult = await generateContentWithFallback(
     contents,
     MENTOR_CHAT_PROMPT,
     0.6,
     MENTOR_CHAT_SCHEMA
   );
+
+  // A safeJsonParse segítségével objektummá alakítjuk a választ, hogy a frontend közvetlenül elérje a mezőket
+  const parsedData = safeJsonParse(rawResult.text);
+
+  const result = {
+    ...rawResult,
+    data: parsedData,
+  };
 
   // 3. Eltároljuk a választ a gyorsítótárban a következő alkalomra
   if (cleanMessage) {
