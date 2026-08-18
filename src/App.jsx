@@ -4,12 +4,16 @@ import { Footer } from './components/Footer';
 import { LoginForm } from './components/LoginForm';
 import { ResourceEngine } from './components/ResourceEngine';
 import { MentorChat } from './components/MentorChat';
+import PresentationModal from './components/presentationalModal';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [presentationMode, setPresentationMode] = useState(false);
   const [activeResourceMode, setActiveResourceMode] = useState('faq');
+  
+  // Állapot a prezentációs modális ablakhoz
+  const [isPresentationModalOpen, setIsPresentationModalOpen] = useState(false);
   
   // Állapotok a fájlok kezeléséhez
   const [availableFiles, setAvailableFiles] = useState([]);
@@ -175,6 +179,7 @@ export default function App() {
         presentationMode={presentationMode} 
         setPresentationMode={setPresentationMode} 
         onLogout={handleLogout} 
+        onOpenPresentation={() => setIsPresentationModalOpen(true)}
       />
 
       {quotaExhausted && (
@@ -216,6 +221,12 @@ export default function App() {
       </main>
 
       <Footer />
+
+      {/* Prezentációs modális ablak bekötése */}
+      <PresentationModal 
+        isOpen={isPresentationModalOpen} 
+        onClose={() => setIsPresentationModalOpen(false)} 
+      />
     </div>
   );
 }
