@@ -108,10 +108,8 @@ export function ResourceEngine({
 
   const handleFileChange = (newUri) => {
     setSelectedFileUri(newUri);
-    // Ha nem GYIK módban vagyunk, és választott fájlt, azonnal frissítjük a tartalmat
-    if (activeResourceMode !== "faq" && newUri && handleResourceFetch) {
-      handleResourceFetch(activeResourceMode, newUri);
-    }
+    // Fájlváltáskor nem hívunk API-t, a felhasználó maga döntheti el, 
+    // hogy a kiválasztott gombra (Kvíz vagy Összefoglaló) kattintva kéri-e a tartalmat.
   };
 
   const handleSelectOption = (qIdx, option) => {
@@ -211,7 +209,7 @@ export function ResourceEngine({
           </div>
         )}
 
-        {/* 1. ÖSSZEFOGLALÓ NÉZET (Frissítve: paragraphs tömb renderelése .map()-pel kártyákra) */}
+        {/* 1. ÖSSZEFOGLALÓ NÉZET */}
         {!resourceSubmitting &&
           !isMissingFileError &&
           activeResourceMode === "chapter_summary" &&
@@ -246,22 +244,34 @@ export function ResourceEngine({
             </div>
           )}
 
-        {/* 2. KVÍZ NÉZET (5 Kérdés) - Változatlan */}
+        {/* 2. KVÍZ NÉZET (5 Kérdés) */}
         {!resourceSubmitting &&
           !isMissingFileError &&
           activeResourceMode === "quiz_generation" &&
           quizList.length > 0 && (
             <div className="space-y-4">
-              {/* Eredményjelző sáv */}
-              <div className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-[#14161b] p-3 text-xs" aria-live="polite">
+              {/* Eredményjelző sáv és Új Kvíz gomb */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 rounded-2xl border border-amber-500/30 bg-[#14161b] p-3 text-xs" aria-live="polite">
                 <span className="font-semibold text-stone-300">
                   Kitöltött kérdések: {answeredCount} / {quizList.length}
+                  {answeredCount === quizList.length && (
+                    <span className="ml-2 font-bold text-amber-400">
+                      (Eredmény: {correctCount} / {quizList.length} helyes! 🎉)
+                    </span>
+                  )}
                 </span>
-                {answeredCount === quizList.length && (
-                  <span className="font-bold text-amber-400">
-                    Eredmény: {correctCount} / {quizList.length} helyes válasz! 🎉
-                  </span>
-                )}
+
+                <button
+                  onClick={() => {
+                    if (handleResourceFetch && selectedFileUri) {
+                      handleResourceFetch("quiz_generation", selectedFileUri);
+                    }
+                  }}
+                  disabled={resourceSubmitting || !selectedFileUri}
+                  className="rounded-xl bg-amber-500/20 border border-amber-500/50 px-3 py-1 font-semibold text-amber-300 transition hover:bg-amber-500/30 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50"
+                >
+                  🔄 Új kvíz generálása
+                </button>
               </div>
 
               {/* Kérdések listája */}
@@ -326,7 +336,7 @@ export function ResourceEngine({
             </div>
           )}
 
-        {/* 3. GYIK NÉZET - Változatlan */}
+        {/* 3. GYIK NÉZET */}
         {!resourceSubmitting && activeResourceMode === "faq" && (
           <div className="space-y-3">
             {localSubmitting && (
