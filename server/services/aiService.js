@@ -9,6 +9,8 @@ import {
   RESOURCE_ENGINE_PROMPT,
 } from "../config/prompts.js";
 
+import { mentorCache } from "../utils/mentorCache.js";
+
 // AI modellek sorrendje hiba/kvótalimit esetére (Fallback chain)
 const MODEL_CHAIN = [
   "gemini-3.5-flash-lite",
@@ -196,6 +198,9 @@ export async function initializeDocuments(dataDir) {
       }
     }
 
+    // Vállalati szinten: a dokumentumok betöltésekor/frissülésekor ürítjük a cache-t
+    mentorCache.clear();
+
     console.log(
       "✨ Valamennyi dokumentum sikeresen csatolva a Gemini motorhoz!"
     );
@@ -263,6 +268,15 @@ async function generateContentWithFallback(
 }
 
 export async function callMentorChat(userMessage, activeMentors) {
+  const cleanMessage = userMessage.trim().toLowerCase();
+
+  // 1. Ellenőrzés: ha a kérdés már szerepel a gyorsítótárban, azonnal visszaküldjük
+  if (cleanMessage && mentorCache.get(cleanMessage)) {
+    console.log("⚡ [MENTOR CACHE] Találat a gyorsítótárban, az AI hívás kihagyva!");
+    return mentorCache.get(cleanMessage);
+  }
+
+  // 2. Ha nincs cache-ben, összeállítjuk a kérést és hívjuk az AI-t
   const fileParts = uploadedFiles.map((f) => ({ fileData: f.fileData }));
   const contents = [
     {
@@ -276,12 +290,19 @@ export async function callMentorChat(userMessage, activeMentors) {
     },
   ];
 
-  return await generateContentWithFallback(
+  const result = await generateContentWithFallback(
     contents,
     MENTOR_CHAT_PROMPT,
     0.6,
     MENTOR_CHAT_SCHEMA
   );
+
+  // 3. Eltároljuk a választ a gyorsítótárban a következő alkalomra
+  if (cleanMessage) {
+    mentorCache.set(cleanMessage, result);
+  }
+
+  return result;
 }
 
 export async function callResourceEngine(
