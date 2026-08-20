@@ -11,6 +11,7 @@ import {
 
 import { mentorCache } from "../utils/mentorCache.js";
 import { safeJsonParse } from "../utils/jsonParser.js";
+import { sanitizeFileName } from "../utils/fileHelpers.js";
 
 // AI modellek sorrendje hiba/kvótalimit esetére (Fallback chain)
 const MODEL_CHAIN = [
@@ -96,13 +97,6 @@ export function getAi() {
   }
   return aiClient;
 }
-
-const sanitizeFileName = (str) => {
-  return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9.\-_]/g, "_");
-};
 
 export async function initializeDocuments(dataDir) {
   const ai = getAi();
@@ -313,17 +307,13 @@ export async function callMentorChat(userMessage, activeMentors) {
   return result;
 }
 
-export async function callResourceEngine(
-  mode,
-  selectedChapter = null,
-  selectedFileUri = null
-) {
+export async function callResourceEngine(mode, selectedFileUri = null) {
   const foundFile = selectedFileUri
     ? uploadedFiles.find((f) => f.fileData.fileUri === selectedFileUri)
     : null;
 
   const fileParts = foundFile ? [{ fileData: foundFile.fileData }] : [];
-  const promptText = `Kért mód: ${mode}. ${selectedChapter ? `Fejezet: ${selectedChapter}. ` : ""}Generáld a tartalmat szigorúan csak a csatolt dokumentum alapján!`;
+  const promptText = `Kért mód: ${mode}. Generáld a tartalmat szigorúan csak a csatolt dokumentum alapján!`;
 
   const contents = [
     {
