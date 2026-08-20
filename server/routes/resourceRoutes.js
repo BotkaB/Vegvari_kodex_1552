@@ -51,15 +51,13 @@ const loadFaqData = () => {
 // POST /api/resources - Dinamikus AI tartalomgenerálás
 router.post("/resources", authGuard, chatLimiter, async (req, res) => {
   try {
-    const { mode, selectedChapter, selectedFileUri } = req.body;
+    const { mode, selectedFileUri } = req.body;
 
     if (!mode) {
       return res.status(400).json({ error: "A 'mode' megadása kötelező!" });
     }
 
-    // 👇 JAVÍTVA: A selectedFileUri-t adjuk át harmadik (vagy megfelelő) paraméterként, 
-    // hogy a callResourceEngine pontosan tudja, melyik fájllal kell dolgoznia.
-    const serviceResult = await callResourceEngine(mode, selectedChapter, selectedFileUri);
+    const serviceResult = await callResourceEngine(mode, selectedFileUri);
     const parsedData = safeJsonParse(serviceResult.text);
 
     if (serviceResult.fallbackUsed && serviceResult.warningMessage) {
