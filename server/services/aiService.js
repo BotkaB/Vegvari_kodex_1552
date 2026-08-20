@@ -11,6 +11,7 @@ import {
 
 import { mentorCache } from "../utils/mentorCache.js";
 import { safeJsonParse } from "../utils/jsonParser.js";
+import { sanitizeFileName } from "../utils/fileHelpers.js";
 
 // AI modellek sorrendje hiba/kvótalimit esetére (Fallback chain)
 const MODEL_CHAIN = [
@@ -96,13 +97,6 @@ export function getAi() {
   }
   return aiClient;
 }
-
-const sanitizeFileName = (str) => {
-  return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9.\-_]/g, "_");
-};
 
 export async function initializeDocuments(dataDir) {
   const ai = getAi();
