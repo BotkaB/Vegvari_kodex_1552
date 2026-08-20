@@ -313,17 +313,13 @@ export async function callMentorChat(userMessage, activeMentors) {
   return result;
 }
 
-export async function callResourceEngine(
-  mode,
-  selectedChapter = null,
-  selectedFileUri = null
-) {
+export async function callResourceEngine(mode, selectedFileUri = null) {
   const foundFile = selectedFileUri
     ? uploadedFiles.find((f) => f.fileData.fileUri === selectedFileUri)
     : null;
 
   const fileParts = foundFile ? [{ fileData: foundFile.fileData }] : [];
-  const promptText = `Kért mód: ${mode}. ${selectedChapter ? `Fejezet: ${selectedChapter}. ` : ""}Generáld a tartalmat szigorúan csak a csatolt dokumentum alapján!`;
+  const promptText = `Kért mód: ${mode}. Generáld a tartalmat szigorúan csak a csatolt dokumentum alapján!`;
 
   const contents = [
     {
