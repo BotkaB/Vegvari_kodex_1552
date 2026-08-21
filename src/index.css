@@ -6,8 +6,8 @@
   font-family: 'Cinzel', 'Georgia', serif;
   line-height: 1.6;
   font-weight: 400;
-  color: #e2e8f0;
-  background: #1a1c23;
+  color: theme('colors.mist');
+  background: theme('colors.castle.base');
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -22,53 +22,29 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  /* Várfal kőtextúra illúzió finom mintázattal és sötét kő alappal */
-  background-color: #16181d;
+  background-color: theme('colors.castle.dark');
   background-image: 
     radial-gradient(ellipse at 50% 0%, rgba(80, 85, 95, 0.25) 0%, transparent 60%),
     repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 4px),
     linear-gradient(180deg, #1f2229 0%, #101216 100%);
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
+button, input { font: inherit; }
 
-button,
-input {
-  font: inherit;
-}
-
-/* Akadálymentesítési segédosztály képernyőolvasókhoz (Screen Reader Only) */
 .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;
 }
 
-/* Billentyűzetes fókusz jelölése a nem Tailwind-es vagy natív elemekhez */
-button:focus-visible,
-input:focus-visible,
-select:focus-visible {
-  outline: 2px solid #fbbf24;
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid theme('colors.ember.DEFAULT');
   outline-offset: 2px;
 }
 
-/* Mozgáscsökkentési támogatás (Reduced Motion) */
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  
-  *,
-  *::before,
-  *::after {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -76,20 +52,24 @@ select:focus-visible {
   }
 }
 
-/* Egyedi középkori görgetősáv */
-::-webkit-scrollbar {
-  width: 8px;
-}
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #121418; }
+::-webkit-scrollbar-thumb { background: theme('colors.castle.border'); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #4e5565; }
 
-::-webkit-scrollbar-track {
-  background: #121418;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #3a3f4b;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #4e5565;
+@layer components {
+  .castle-input {
+    @apply w-full rounded-2xl border border-castle-border bg-castle-input px-4 py-2 text-white outline-none 
+           focus:border-ember focus:ring-2 focus:ring-ember shadow-inner;
+  }
+  .btn-primary {
+    @apply w-full rounded-2xl bg-gradient-to-r from-ember-400 to-orange-600 px-4 py-2.5 font-bold text-stone-950 
+           transition hover:brightness-110 disabled:opacity-50 shadow-lg focus:outline-none focus:ring-2 focus:ring-ember;
+  }
+  .error-box {
+    @apply rounded-2xl border border-status-error/50 bg-status-error/10 px-4 py-2 text-sm text-red-200;
+  }
+  .btn-header {
+    @apply rounded-xl border px-4 py-2 text-sm font-medium transition shadow focus:outline-none focus:ring-2;
+  }
 }

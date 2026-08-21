@@ -4,6 +4,7 @@ import { Footer } from './components/Footer';
 import { LoginForm } from './components/LoginForm';
 import { ResourceEngine } from './components/ResourceEngine';
 import { MentorChat } from './components/MentorChat';
+import PresentationModal from './components/PresentationModal';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -97,8 +98,6 @@ export default function App() {
 
       const data = await res.json();
 
-      console.log("🔍 Szervertől kapott adatok:", data);
-
       if (res.status === 429 || data.error === 'elfogyott a keret') {
         setQuotaExhausted(true);
         throw new Error(data.details || 'Minden elérhető AI modell napi kvótája kimerült.');
@@ -163,26 +162,39 @@ export default function App() {
     }
   };
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center bg-[#16181d] text-stone-400" role="status" aria-live="polite">Betöltés...</div>;
+  if (loading) return <div className="flex min-h-screen items-center justify-center bg-castle-dark text-stone-400" role="status" aria-live="polite">Betöltés...</div>;
   if (!user) return <LoginForm onLogin={setUser} />;
 
   return (
-    <div className={`flex min-h-screen flex-col bg-[#16181d] text-stone-100 ${presentationMode ? 'scale-105 transition-transform' : ''}`}>
-      <Header 
-        showButtons={true} 
-        presentationMode={presentationMode} 
-        setPresentationMode={setPresentationMode} 
-        onLogout={handleLogout} 
-      />
+    <div className={`flex min-h-screen flex-col bg-castle-dark text-stone-100 ${presentationMode ? 'scale-105 transition-transform' : ''}`}>
+
+
+
+
+
+
+
+            <Header 
+              showButtons={true} 
+              presentationMode={presentationMode} 
+              setPresentationMode={setPresentationMode} 
+              onLogout={handleLogout} 
+              onOpenPresentation={() => setPresentationMode(true)}
+            />
+
+            <PresentationModal 
+              isOpen={presentationMode} 
+              onClose={() => setPresentationMode(false)} 
+            />
 
       {quotaExhausted && (
-        <div className="bg-red-900/90 border-b border-red-700 p-3 text-center text-sm font-semibold text-red-200" role="alert">
+        <div className="bg-status-error/90 border-b border-status-error p-3 text-center text-sm font-semibold text-red-200" role="alert">
           ⚠️ Elfogyott a keret: Minden elérhető AI modell napi kvótája kimerült. Kérjük, próbálja meg később.
         </div>
       )}
 
       {warningMessage && !quotaExhausted && (
-        <div className="bg-amber-900/80 border-b border-amber-700 p-2 text-center text-xs font-semibold text-amber-200" role="status" aria-live="polite">
+        <div className="bg-amber-950/80 border-b border-amber-700 p-2 text-center text-xs font-semibold text-amber-200" role="status" aria-live="polite">
           ℹ️ {warningMessage}
         </div>
       )}
