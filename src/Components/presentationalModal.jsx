@@ -107,17 +107,17 @@ export default function PresentationModal({ isOpen, onClose }) {
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="relative w-full max-w-4xl bg-stone-900 border border-stone-700 rounded-xl shadow-2xl overflow-hidden text-stone-100 flex flex-col h-[600px]">
+      <div className="relative w-full max-w-4xl bg-castle-light border border-castle-border rounded-xl shadow-2xl overflow-hidden text-stone-100 flex flex-col h-[600px]">
         
         {/* Fejléc */}
-        <div className="flex items-center justify-between px-6 py-4 bg-stone-950 border-b border-stone-800">
-          <div id="modal-title" className="text-sm font-semibold text-amber-500 tracking-wider">
+        <div className="flex items-center justify-between px-6 py-4 bg-castle-base border-b border-castle-border">
+          <div id="modal-title" className="text-sm font-semibold text-ember-400 tracking-wider">
             VÉGVÁRI KÓDEX 1552 — PROJEKTPREZENTÁCIÓ
           </div>
           <button 
             onClick={onClose}
             aria-label="Prezentáció bezárása"
-            className="text-stone-400 hover:text-white transition text-xl font-bold px-2 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
+            className="text-stone-400 hover:text-white transition text-xl font-bold px-2 focus:outline-none focus:ring-2 focus:ring-ember rounded"
           >
             ✕
           </button>
@@ -125,19 +125,19 @@ export default function PresentationModal({ isOpen, onClose }) {
 
         {/* Fő tartalom */}
         <div 
-          className="flex-1 p-8 md:p-12 flex flex-col justify-center bg-gradient-to-br from-stone-900 to-stone-950 focus:outline-none"
+          className="flex-1 p-8 md:p-12 p-6 flex flex-col justify-start bg-castle-light/50 focus:outline-none"
           aria-live="polite"
         >
-          <div className="text-amber-400/80 text-sm font-medium uppercase tracking-widest mb-2">
+          <div className="text-ember-400/80 text-sm font-medium uppercase tracking-widest mb-2">
             {slide.subtitle}
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-stone-100 mb-6 border-b border-stone-800 pb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 border-b border-castle-border pb-4">
             {slide.title}
           </h2>
           <ul className="space-y-3 text-stone-300 text-lg md:text-xl">
             {slide.bullets.map((bullet, index) => (
               <li key={index} className="flex items-start">
-                <span className="text-amber-500 mr-3 mt-1.5 text-sm" aria-hidden="true">▪</span>
+                <span className="text-ember mr-3 mt-1.5 text-sm" aria-hidden="true">▪</span>
                 <span>{bullet}</span>
               </li>
             ))}
@@ -145,11 +145,11 @@ export default function PresentationModal({ isOpen, onClose }) {
         </div>
 
         {/* Lábléc / Navigáció */}
-        <div className="flex items-center justify-between px-6 py-4 bg-stone-950 border-t border-stone-800">
+        <div className="flex items-center justify-between px-6 py-4 bg-castle-base border-t border-castle-border">
           <button
             onClick={prevSlide}
             disabled={currentSlide === 0}
-            className="px-4 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="btn-header bg-castle-base hover:bg-castle-input disabled:opacity-40"
           >
             ← Előző
           </button>
@@ -161,7 +161,7 @@ export default function PresentationModal({ isOpen, onClose }) {
           <button
             onClick={nextSlide}
             disabled={currentSlide === presentationSlides.length - 1}
-            className="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed text-stone-950 font-semibold rounded text-sm transition focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="btn-header bg-ember text-stone-950 font-bold hover:bg-ember-400 disabled:opacity-40"
           >
             Következő →
           </button>
