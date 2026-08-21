@@ -1,16 +1,33 @@
 // server/routes/authRoutes.js
 import express from "express";
+import bcrypt from "bcryptjs";
 import { authLimiter } from "../middlewares/rateLimiters.js";
 
 const router = express.Router();
 
 // POST /api/auth/login
-router.post("/login", authLimiter, (req, res) => {
+router.post("/login", authLimiter, async (req, res) => {
   const { username, password } = req.body;
   const validUsername = process.env.AUTH_USERNAME;
   const validPassword = process.env.AUTH_PASSWORD;
+  const passwordHash = process.env.AUTH_PASSWORD_HASH; // opcionális bcrypt hash
 
-  if (username === validUsername && password === validPassword) {
+  if (!validUsername || !validPassword) {
+    console.error("❌ Hiányzik AUTH_USERNAME vagy AUTH_PASSWORD az .env-ből!");
+    return res.status(500).json({ error: "Szerver konfigurációs hiba." });
+  }
+
+  let passwordOk = false;
+
+  if (passwordHash) {
+    // Bcrypt compare (ha hash be van állítva)
+    passwordOk = await bcrypt.compare(password, passwordHash);
+  } else {
+    // Plain text fallback (dev / ha nincs hash)
+    passwordOk = (password === validPassword);
+  }
+
+  if (username === validUsername && passwordOk) {
     req.session.authenticated = true;
     req.session.user = { username };
 
@@ -54,3 +71,4 @@ router.get("/status", (req, res) => {
 });
 
 export default router;
+
