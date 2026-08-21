@@ -4,7 +4,7 @@ import { Footer } from './components/Footer';
 import { LoginForm } from './components/LoginForm';
 import { ResourceEngine } from './components/ResourceEngine';
 import { MentorChat } from './components/MentorChat';
-import PresentationModal from './components/presentationalModal';
+import PresentationModal from './components/PresentationModal';
 
 export default function App() {
   const [user, setUser] = useState(null);
