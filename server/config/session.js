@@ -1,7 +1,7 @@
 // server/config/session.js
 
 export const sessionConfig = {
-  secret: process.env.SESSION_SECRET || "vegvari-kodex-1552-secret-key",
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {

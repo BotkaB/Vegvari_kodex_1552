@@ -7,8 +7,8 @@ const router = express.Router();
 // POST /api/auth/login
 router.post("/login", authLimiter, (req, res) => {
   const { username, password } = req.body;
-  const validUsername = process.env.AUTH_USERNAME || "admin";
-  const validPassword = process.env.AUTH_PASSWORD || "vegvar1552";
+  const validUsername = process.env.AUTH_USERNAME;
+  const validPassword = process.env.AUTH_PASSWORD;
 
   if (username === validUsername && password === validPassword) {
     req.session.authenticated = true;
