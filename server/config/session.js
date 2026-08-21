@@ -1,6 +1,6 @@
 // server/config/session.js
 
-export const sessionConfig = {
+export const getSessionConfig = () => ({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
@@ -9,4 +9,4 @@ export const sessionConfig = {
     secure: process.env.NODE_ENV === "production",
     maxAge: 24 * 60 * 60 * 1000,
   },
-};
+});
