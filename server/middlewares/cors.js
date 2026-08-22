@@ -22,7 +22,10 @@ export function createCorsMiddleware(allowedOrigins) {
       );
 
       // Preflight (OPTIONS) kezelése
-      if (req.method === "OPTIONS") return res.sendStatus(204);
+      if (req.method === "OPTIONS") {
+        res.setHeader("Access-Control-Max-Age", "3600"); // 1 óra cache
+        return res.sendStatus(204);
+      }
 
       return next();
     }

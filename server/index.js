@@ -31,7 +31,9 @@ if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
 
 // --- CORS Whitelist beállítás ---
 const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:3000",
+  process.env.CLIENT_URL || "http://localhost:3000", // Jelenlegi monolit
+  // "http://localhost:5173",                           // Vite dev
+  // process.env.FRONTEND_PROD_URL,                   // Pl. https://vegvari-kodex.vercel.app
 ].filter(Boolean);
 
 console.log(">>> CORS DEBUG allowedOrigins:", allowedOrigins);
@@ -88,4 +90,3 @@ app.listen(port, async () => {
   console.log(`🚀 Server running on port ${port}`);
   await initializeDocuments(dataDir);
 });
-
