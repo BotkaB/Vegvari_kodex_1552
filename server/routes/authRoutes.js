@@ -15,11 +15,9 @@ router.post("/login", authLimiter, async (req, res) => {
   if (!validUsername || !validPassword) {
     console.error("❌ Hiányzik AUTH_USERNAME vagy AUTH_PASSWORD az .env-ből!");
     const isProd = process.env.NODE_ENV === "production";
-    return res
-      .status(500)
-      .json({
-        error: isProd ? "Internal server error" : "Szerver konfigurációs hiba.",
-      });
+    return res.status(500).json({
+      error: isProd ? "Internal server error" : "Szerver konfigurációs hiba.",
+    });
   }
 
   let passwordOk = false;
@@ -33,20 +31,32 @@ router.post("/login", authLimiter, async (req, res) => {
   }
 
   if (username === validUsername && passwordOk) {
-    req.session.authenticated = true;
-    req.session.user = { username };
-
-    // Munkamenet elmentése a válasz kiküldése előtt
-    return req.session.save((err) => {
+    // Session regenerálás: Új session ID (Session Fixation védelem)
+    return req.session.regenerate((err) => {
       if (err) {
-        return res.status(500).json({ error: "Hiba a munkamenet mentésekor!" });
+        return res
+          .status(500)
+          .json({ error: "Hiba a munkamenet inicializálásakor!" });
       }
 
-      // Visszaküldjük a user objektumot is a frontendnek
-      return res.json({
-        success: true,
-        message: "Sikeres bejelentkezés!",
-        user: req.session.user,
+      // Az új, tiszta session objektumban állítjuk be az adatokat
+      req.session.authenticated = true;
+      req.session.user = { username };
+
+      // Az új session mentése
+      return req.session.save((saveErr) => {
+        if (saveErr) {
+          return res
+            .status(500)
+            .json({ error: "Hiba a munkamenet mentésekor!" });
+        }
+
+        // Visszaküldjük a user objektumot is a frontendnek
+        return res.json({
+          success: true,
+          message: "Sikeres bejelentkezés!",
+          user: req.session.user,
+        });
       });
     });
   }
