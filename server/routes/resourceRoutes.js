@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { authGuard } from "../middlewares/auth.js";
-import { chatLimiter } from "../middlewares/rateLimiters.js";
+import { resourceLimiter } from "../middlewares/rateLimiters.js";
 import { callResourceEngine, getUploadedFiles } from "../services/aiService.js";
 import { safeJsonParse } from "../utils/jsonParser.js";
 
@@ -49,7 +49,7 @@ const loadFaqData = () => {
 // ---------------------------------------------------------------------------
 
 // POST /api/resources - Dinamikus AI tartalomgenerálás
-router.post("/resources", authGuard, chatLimiter, async (req, res) => {
+router.post("/resources", authGuard, resourceLimiter, async (req, res) => {
   try {
     const { mode, selectedFileUri } = req.body;
 
@@ -75,9 +75,10 @@ router.post("/resources", authGuard, chatLimiter, async (req, res) => {
       });
     }
 
+    const isProd = process.env.NODE_ENV === "production";
     return res.status(500).json({
       error: "Hiba történt az erőforrás generálása során.",
-      details: err.message,
+      ...(isProd ? {} : { details: err.message }),
     });
   }
 });
@@ -112,3 +113,4 @@ router.get("/faq", authGuard, (req, res) => {
 });
 
 export default router;
+

@@ -1,30 +1,62 @@
 // server/routes/authRoutes.js
 import express from "express";
+import bcrypt from "bcryptjs";
 import { authLimiter } from "../middlewares/rateLimiters.js";
 
 const router = express.Router();
 
 // POST /api/auth/login
-router.post("/login", authLimiter, (req, res) => {
+router.post("/login", authLimiter, async (req, res) => {
   const { username, password } = req.body;
-  const validUsername = process.env.AUTH_USERNAME || "admin";
-  const validPassword = process.env.AUTH_PASSWORD || "vegvar1552";
+  const validUsername = process.env.AUTH_USERNAME;
+  const validPassword = process.env.AUTH_PASSWORD;
+  const passwordHash = process.env.AUTH_PASSWORD_HASH; // opcionális bcrypt hash
 
-  if (username === validUsername && password === validPassword) {
-    req.session.authenticated = true;
-    req.session.user = { username };
+  if (!validUsername || !validPassword) {
+    console.error("❌ Hiányzik AUTH_USERNAME vagy AUTH_PASSWORD az .env-ből!");
+    const isProd = process.env.NODE_ENV === "production";
+    return res.status(500).json({
+      error: isProd ? "Internal server error" : "Szerver konfigurációs hiba.",
+    });
+  }
 
-    // Munkamenet elmentése a válasz kiküldése előtt
-    return req.session.save((err) => {
+  let passwordOk = false;
+
+  if (passwordHash) {
+    // Bcrypt compare (ha hash be van állítva)
+    passwordOk = await bcrypt.compare(password, passwordHash);
+  } else {
+    // Plain text fallback (dev / ha nincs hash)
+    passwordOk = password === validPassword;
+  }
+
+  if (username === validUsername && passwordOk) {
+    // Session regenerálás: Új session ID (Session Fixation védelem)
+    return req.session.regenerate((err) => {
       if (err) {
-        return res.status(500).json({ error: "Hiba a munkamenet mentésekor!" });
+        return res
+          .status(500)
+          .json({ error: "Hiba a munkamenet inicializálásakor!" });
       }
 
-      // Visszaküldjük a user objektumot is a frontendnek
-      return res.json({
-        success: true,
-        message: "Sikeres bejelentkezés!",
-        user: req.session.user,
+      // Az új, tiszta session objektumban állítjuk be az adatokat
+      req.session.authenticated = true;
+      req.session.user = { username };
+
+      // Az új session mentése
+      return req.session.save((saveErr) => {
+        if (saveErr) {
+          return res
+            .status(500)
+            .json({ error: "Hiba a munkamenet mentésekor!" });
+        }
+
+        // Visszaküldjük a user objektumot is a frontendnek
+        return res.json({
+          success: true,
+          message: "Sikeres bejelentkezés!",
+          user: req.session.user,
+        });
       });
     });
   }

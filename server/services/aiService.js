@@ -1,7 +1,5 @@
-// server/services/aiService.js
 import fs from "fs";
 import path from "path";
-import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
 
 import {
@@ -12,6 +10,11 @@ import {
 import { mentorCache } from "../utils/mentorCache.js";
 import { safeJsonParse } from "../utils/jsonParser.js";
 import { sanitizeFileName } from "../utils/fileHelpers.js";
+import {
+  validateResponse,
+  MENTOR_CHAT_SCHEMA,
+  RESOURCE_ENGINE_SCHEMA,
+} from "../utils/responseValidator.js";
 
 // AI modellek sorrendje hiba/kvótalimit esetére (Fallback chain)
 const MODEL_CHAIN = [
@@ -23,73 +26,11 @@ const MODEL_CHAIN = [
   "gemini-3-flash",
 ];
 
-// Mentor Chat elvárt JSON válaszstruktúrája
-const MENTOR_CHAT_SCHEMA = {
-  type: "object",
-  properties: {
-    mode: { type: "string" },
-    attack_detected: { type: "boolean" },
-    attack_type: { type: "string" },
-    mate_ba: { type: "string" },
-    ambrus_ba: { type: "string" },
-    kristof_aprod: { type: "string" },
-    janos_deak: { type: "string" },
-    citation: { type: "string" },
-  },
-  required: [
-    "mode",
-    "attack_detected",
-    "attack_type",
-    "mate_ba",
-    "ambrus_ba",
-    "kristof_aprod",
-    "janos_deak",
-    "citation",
-  ],
-};
-
-// Resource Engine elvárt JSON válaszstruktúrája (Frissítve: text helyett paragraphs tömb)
-const RESOURCE_ENGINE_SCHEMA = {
-  type: "object",
-  properties: {
-    mode: { type: "string" },
-    citation: { type: "string" },
-    document_content: {
-      type: "object",
-      properties: {
-        title: { type: "string" },
-        paragraphs: {
-          type: "array",
-          items: { type: "string" },
-        },
-      },
-      required: ["title", "paragraphs"],
-      nullable: true,
-    },
-    quizzes: {
-      type: "array",
-      nullable: true,
-      items: {
-        type: "object",
-        properties: {
-          question: { type: "string" },
-          options: { type: "array", items: { type: "string" } },
-          correct_answer: { type: "string" },
-          explanation: { type: "string" },
-        },
-        required: ["question", "options", "correct_answer", "explanation"],
-      },
-    },
-  },
-  required: ["mode", "citation"],
-};
-
 let uploadedFiles = [];
 let aiClient = null;
 
 export function getAi() {
   if (!aiClient) {
-    dotenv.config();
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
       aiClient = new GoogleGenAI({ apiKey });
@@ -102,7 +43,7 @@ export async function initializeDocuments(dataDir) {
   const ai = getAi();
   if (!ai) {
     console.warn(
-      "⚠️ Nem található Gemini API kulcs, a dokumentumok feltöltése kihagyva."
+      "⚠️ Nem található Gemini API kulcs, a dokumentumok feltöltése kihagyva.",
     );
     return;
   }
@@ -128,7 +69,7 @@ export async function initializeDocuments(dataDir) {
     const remoteFileMap = new Map();
     try {
       const listResponse = await ai.files.list();
-      
+
       if (
         listResponse &&
         typeof listResponse[Symbol.asyncIterator] === "function"
@@ -149,7 +90,7 @@ export async function initializeDocuments(dataDir) {
     } catch (listError) {
       console.warn(
         "⚠️ Nem sikerült lekérni a távoli fájllistát, szükség esetén újra feltöltjük:",
-        listError.message
+        listError.message,
       );
     }
 
@@ -174,7 +115,9 @@ export async function initializeDocuments(dataDir) {
             mimeType: existingRemote.mimeType || mimeType,
           },
         });
-        console.log(`  ✅ Megtalálva (már fel van töltve): ${cleanDisplayName}`);
+        console.log(
+          `  ✅ Megtalálva (már fel van töltve): ${cleanDisplayName}`,
+        );
       } else {
         console.log(`  📤 Új fájl feltöltése: ${cleanDisplayName}...`);
         const uploadResult = await ai.files.upload({
@@ -200,7 +143,7 @@ export async function initializeDocuments(dataDir) {
     mentorCache.clear();
 
     console.log(
-      "✨ Valamennyi dokumentum sikeresen csatolva a Gemini motorhoz!"
+      "✨ Valamennyi dokumentum sikeresen csatolva a Gemini motorhoz!",
     );
   } catch (error) {
     console.error("❌ Hiba az inicializáláskor:", error);
@@ -215,7 +158,7 @@ async function generateContentWithFallback(
   contents,
   systemInstruction,
   temperature = 0.5,
-  responseSchema = null
+  responseSchema = null,
 ) {
   const ai = getAi();
   if (!ai) throw new Error("A Gemini API kulcs nincs beállítva.");
@@ -245,7 +188,9 @@ async function generateContentWithFallback(
       let warning = null;
       if (i > 0) {
         warning = `Az elsődleges AI modell túlterhelt volt, az alábbira váltottunk: ${modelName}`;
-        console.log(`ℹ️ [MODEL FALLBACK] Sikeres hívás ezzel a modellel: ${modelName}`);
+        console.log(
+          `ℹ️ [MODEL FALLBACK] Sikeres hívás ezzel a modellel: ${modelName}`,
+        );
       }
 
       return {
@@ -253,7 +198,10 @@ async function generateContentWithFallback(
         ...(warning ? { _warning: warning } : {}),
       };
     } catch (err) {
-      console.warn(`⚠️ Hiba a(z) '${modelName}' modellnél:`, err.message || err);
+      console.warn(
+        `⚠️ Hiba a(z) '${modelName}' modellnél:`,
+        err.message || err,
+      );
       lastError = err;
     }
   }
@@ -269,7 +217,9 @@ export async function callMentorChat(userMessage, activeMentors) {
   const cleanMessage = userMessage.trim().toLowerCase();
 
   if (cleanMessage && mentorCache.get(cleanMessage)) {
-    console.log("⚡ [MENTOR CACHE] Találat a gyorsítótárban, az AI hívás kihagyva!");
+    console.log(
+      "⚡ [MENTOR CACHE] Találat a gyorsítótárban, az AI hívás kihagyva!",
+    );
     return mentorCache.get(cleanMessage);
   }
 
@@ -290,14 +240,17 @@ export async function callMentorChat(userMessage, activeMentors) {
     contents,
     MENTOR_CHAT_PROMPT,
     0.6,
-    MENTOR_CHAT_SCHEMA
+    MENTOR_CHAT_SCHEMA,
   );
 
   const parsedData = safeJsonParse(rawResult.text);
 
+  // Validáció a séma alapján
+  const validatedData = validateResponse("mentorChat", parsedData);
+
   const result = {
     ...rawResult,
-    data: parsedData,
+    data: validatedData,
   };
 
   if (cleanMessage) {
@@ -322,10 +275,21 @@ export async function callResourceEngine(mode, selectedFileUri = null) {
     },
   ];
 
-  return await generateContentWithFallback(
+  const rawResult = await generateContentWithFallback(
     contents,
     RESOURCE_ENGINE_PROMPT,
-  0.4,
-  RESOURCE_ENGINE_SCHEMA
+    0.4,
+    RESOURCE_ENGINE_SCHEMA,
   );
+
+  const parsedData = safeJsonParse(rawResult.text);
+
+  // Validáció a séma alapján
+  const validatedData = validateResponse("resourceEngine", parsedData);
+
+  return {
+    ...rawResult,
+    data: validatedData,
+  };
 }
+
