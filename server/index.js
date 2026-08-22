@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import { getSessionConfig } from "./config/session.js";
 import { initializeDocuments } from "./services/aiService.js";
 import { createCorsMiddleware } from "./middlewares/cors.js";
+import { createHelmetMiddleware } from "./middlewares/helmet.js";
 
 // Útvonalak (Routerek) regisztrálása
 import authRoutes from "./routes/authRoutes.js";
@@ -35,6 +36,7 @@ const allowedOrigins = [
 console.log(">>> CORS DEBUG allowedOrigins:", allowedOrigins);
 
 const corsMiddleware = createCorsMiddleware(allowedOrigins);
+const helmetMiddleware = createHelmetMiddleware();
 // -----------------------------------
 
 const app = express();
@@ -49,6 +51,7 @@ const dataDir = path.join(rootDir, "data");
 
 // Globális Middleware-ek bekötése
 app.use(corsMiddleware);
+app.use(createHelmetMiddleware());
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(session(getSessionConfig()));
