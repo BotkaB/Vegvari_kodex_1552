@@ -14,7 +14,12 @@ router.post("/login", authLimiter, async (req, res) => {
 
   if (!validUsername || !validPassword) {
     console.error("❌ Hiányzik AUTH_USERNAME vagy AUTH_PASSWORD az .env-ből!");
-    return res.status(500).json({ error: "Szerver konfigurációs hiba." });
+    const isProd = process.env.NODE_ENV === "production";
+    return res
+      .status(500)
+      .json({
+        error: isProd ? "Internal server error" : "Szerver konfigurációs hiba.",
+      });
   }
 
   let passwordOk = false;
@@ -24,7 +29,7 @@ router.post("/login", authLimiter, async (req, res) => {
     passwordOk = await bcrypt.compare(password, passwordHash);
   } else {
     // Plain text fallback (dev / ha nincs hash)
-    passwordOk = (password === validPassword);
+    passwordOk = password === validPassword;
   }
 
   if (username === validUsername && passwordOk) {
@@ -71,4 +76,3 @@ router.get("/status", (req, res) => {
 });
 
 export default router;
-

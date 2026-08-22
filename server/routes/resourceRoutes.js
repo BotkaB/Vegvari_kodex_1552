@@ -75,9 +75,10 @@ router.post("/resources", authGuard, resourceLimiter, async (req, res) => {
       });
     }
 
+    const isProd = process.env.NODE_ENV === "production";
     return res.status(500).json({
       error: "Hiba történt az erőforrás generálása során.",
-      details: err.message,
+      ...(isProd ? {} : { details: err.message }),
     });
   }
 });

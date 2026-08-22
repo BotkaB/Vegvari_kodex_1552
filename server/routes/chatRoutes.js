@@ -34,9 +34,10 @@ router.post("/mentor-chat", authGuard, chatLimiter, async (req, res) => {
       });
     }
 
+    const isProd = process.env.NODE_ENV === "production";
     return res.status(500).json({
       error: "Hiba történt a válasz generálása során.",
-      details: err.message,
+      ...(isProd ? {} : { details: err.message }),
     });
   }
 });
