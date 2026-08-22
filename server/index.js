@@ -52,7 +52,7 @@ const dataDir = path.join(rootDir, "data");
 
 // Globális Middleware-ek bekötése
 app.use(corsMiddleware);
-app.use(createHelmetMiddleware());
+app.use(helmetMiddleware);
 app.use(globalLimiter);
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
