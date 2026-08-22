@@ -11,6 +11,7 @@ import { getSessionConfig } from "./config/session.js";
 import { initializeDocuments } from "./services/aiService.js";
 import { createCorsMiddleware } from "./middlewares/cors.js";
 import { createHelmetMiddleware } from "./middlewares/helmet.js";
+import { globalLimiter } from "./middlewares/rateLimiters.js";
 
 // Útvonalak (Routerek) regisztrálása
 import authRoutes from "./routes/authRoutes.js";
@@ -52,6 +53,7 @@ const dataDir = path.join(rootDir, "data");
 // Globális Middleware-ek bekötése
 app.use(corsMiddleware);
 app.use(createHelmetMiddleware());
+app.use(globalLimiter);
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(session(getSessionConfig()));
