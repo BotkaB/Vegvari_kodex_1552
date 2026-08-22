@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
 
 import {
@@ -32,7 +31,6 @@ let aiClient = null;
 
 export function getAi() {
   if (!aiClient) {
-    dotenv.config();
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
       aiClient = new GoogleGenAI({ apiKey });
@@ -294,3 +292,4 @@ export async function callResourceEngine(mode, selectedFileUri = null) {
     data: validatedData,
   };
 }
+
